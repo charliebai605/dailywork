@@ -16,7 +16,8 @@ class ExpenseTracker {
   async loadData() {
     try {
       const response = await fetch('data.json');
-      this.data = await response.json();
+      const text = await response.text();
+      this.data = JSON.parse(text);
     } catch (error) {
       console.error('Failed to load data:', error);
       this.data = { expenses: [], exchangeRates: [], metadata: {} };
@@ -352,7 +353,7 @@ async function addExpense() {
     }
 
     const fileData = await getRes.json();
-    const content = JSON.parse(atob(fileData.content));
+    const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, '')))));
 
     // 計算預估台幣
     const estimateTWD = jpy > 0 ? Math.round(jpy * tracker.currentRate) : (twd || 0);
@@ -383,7 +384,7 @@ async function addExpense() {
       },
       body: JSON.stringify({
         message: `新增支出：${name}`,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))).replace(/\n/g, ''),
         sha: fileData.sha
       })
     });
