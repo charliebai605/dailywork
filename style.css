@@ -272,7 +272,14 @@ td { padding: 12px 10px; font-size: 0.9em; }
 .twd-cell { font-weight: 600; }
 .estimate { color: var(--warning); }
 .actual { color: var(--success); }
-.notes { color: #9ca3af; font-size: 0.85em; max-width: 120px; }
+.notes {
+  color: #9ca3af;
+  font-size: 0.85em;
+  max-width: 120px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .action-cell { white-space: nowrap; }
 
 /* Category Badge */
