@@ -186,6 +186,9 @@ class ExpenseTracker {
           </span>
         </td>
         <td class="notes">${expense.notes || '-'}</td>
+        <td>
+          <button class="delete-btn" onclick="deleteExpense(${expense.id}, '${expense.name}')">🗑️</button>
+        </td>
       </tr>
     `).join('');
 
@@ -201,6 +204,7 @@ class ExpenseTracker {
             <th>實際台幣</th>
             <th>狀態</th>
             <th>備註</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -287,6 +291,59 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('f-token').value = savedToken;
   }
 });
+
+async function deleteExpense(id, name) {
+  if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+
+  const token = localStorage.getItem('github_token');
+  if (!token) {
+    alert('請先在新增支出表單中輸入 GitHub Token');
+    toggleForm();
+    return;
+  }
+
+  const OWNER = 'charliebai605';
+  const REPO = 'dailywork';
+  const FILE = 'data.json';
+  const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+
+  try {
+    const getRes = await fetch(API, {
+      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+    });
+
+    if (!getRes.ok) throw new Error('無法取得資料');
+
+    const fileData = await getRes.json();
+    const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, '')))));
+
+    content.expenses = content.expenses.filter(e => e.id !== id);
+    content.metadata.lastUpdated = new Date().toISOString();
+
+    const putRes = await fetch(API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `刪除支出：${name}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))).replace(/\n/g, ''),
+        sha: fileData.sha
+      })
+    });
+
+    if (!putRes.ok) throw new Error('刪除失敗');
+
+    tracker.data = content;
+    tracker.recalculateEstimates();
+    tracker.render();
+
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
 
 function toggleForm() {
   const form = document.getElementById('add-form');
