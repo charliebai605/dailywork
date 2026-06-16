@@ -119,7 +119,9 @@ class ExpenseTracker {
       if (raw.v === 1) {
         // 加密格式
         this.encryptedShell = raw;
-        this.expenses = await decryptData(raw, password);
+        const decrypted = await decryptData(raw, password);
+        // 相容兩種格式：只加密 expenses 陣列，或整個 JSON 物件
+        this.expenses = Array.isArray(decrypted) ? decrypted : (decrypted.expenses || []);
       } else {
         // 舊的明文格式（相容）
         this.expenses = raw.expenses || [];
