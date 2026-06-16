@@ -26,7 +26,7 @@
       "category": "Housing",
       "amountJPY": 125000,
       "actualTWD": null,
-      "estimateTWD": null,
+      "estimateTWD": 24625,
       "isPaid": false,
       "notes": ""
     },
@@ -37,7 +37,7 @@
       "category": "Housing",
       "amountJPY": 159300,
       "actualTWD": null,
-      "estimateTWD": null,
+      "estimateTWD": 31382,
       "isPaid": false,
       "notes": ""
     },
@@ -48,7 +48,7 @@
       "category": "Transport",
       "amountJPY": 20000,
       "actualTWD": null,
-      "estimateTWD": null,
+      "estimateTWD": 3940,
       "isPaid": true,
       "notes": ""
     }
