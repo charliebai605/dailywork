@@ -2,7 +2,7 @@
 
 暑期赴日實習期間的個人支出記帳系統，支援 JPY/TWD 自動匯率換算。
 
-🔗 **網頁：https://charliebai605.github.io/dailywork/**
+🔗 **網頁：https://lixingmanei.netlify.app**
 
 ---
 
