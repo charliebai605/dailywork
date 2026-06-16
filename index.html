@@ -3,23 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>日本實習支出記帳</title>
+    <title>記帳啦啦啦</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- 鎖定畫面 -->
+    <div id="lock-screen" class="lock-screen" style="display:none;">
+        <div class="lock-card">
+            <div class="lock-icon">🔐</div>
+            <h2>記帳啦啦啦</h2>
+            <p class="lock-subtitle">輸入密碼以查看支出記錄</p>
+            <input type="password" id="lock-password" placeholder="輸入密碼" autofocus />
+            <button onclick="submitPassword()">解鎖</button>
+            <div id="lock-error" class="lock-error" style="display:none;"></div>
+        </div>
+    </div>
+
+    <!-- 主畫面 -->
     <div class="container">
         <header>
             <h1>記帳啦啦啦</h1>
-            <div class="subtitle">記錄暑期實習期間的支出情況</div>
+            <div class="header-actions">
+                <span class="subtitle">記錄暑期實習期間的支出情況</span>
+                <button class="lock-btn" onclick="lockApp()" title="鎖定">🔒 鎖定</button>
+            </div>
         </header>
 
-        <!-- 統計卡片 -->
         <div class="stats" id="stats"></div>
-
-        <!-- 分類統計 -->
         <div class="category-stats" id="category-stats"></div>
 
-        <!-- 匯率列 -->
         <div class="exchange-rate-box">
             <div class="exchange-rate-info">
                 <div>
@@ -33,7 +46,6 @@
             </div>
         </div>
 
-        <!-- 篩選列 -->
         <div class="filter-bar">
             <select id="filter-category" onchange="tracker.render()">
                 <option value="">全部分類</option>
@@ -50,21 +62,18 @@
             </select>
         </div>
 
-        <!-- 支出表格 -->
         <div class="main-content">
             <div class="table-wrapper" id="table-wrapper">
                 <p style="text-align:center; padding:40px; color:#6b7280;">正在加載...</p>
             </div>
         </div>
 
-        <!-- 新增支出按鈕 -->
         <div class="add-btn-wrap">
             <button class="add-btn" onclick="openForm()">＋ 新增支出</button>
         </div>
 
         <footer>
-            <div class="last-updated" id="last-updated">⏰ 上次更新: -</div>
-            <div>💾 數據來源: data.json | 匯率來源: exchangerate-api.com</div>
+            <div>💾 data.json 以 AES-256-GCM 加密 | 匯率來源: exchangerate-api.com</div>
         </footer>
     </div>
 

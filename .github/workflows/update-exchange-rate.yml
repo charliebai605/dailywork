@@ -2,9 +2,8 @@ name: Update Exchange Rate
 
 on:
   schedule:
-    # 每天早上 8 點 UTC (台灣時間 16:00) 更新匯率
     - cron: '0 8 * * *'
-  workflow_dispatch:  # 手動觸發
+  workflow_dispatch:
 
 jobs:
   update-rate:
@@ -15,98 +14,52 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.9'
-
-      - name: Update exchange rate
+      - name: Update rates.json
         env:
           PYTHONUTF8: "1"
           PYTHONIOENCODING: "utf-8"
-          LANG: "en_US.UTF-8"
-          LC_ALL: "en_US.UTF-8"
         run: |
           python3 << 'EOF'
-          import json
+          import json, urllib.request, urllib.error
           from datetime import datetime
-          import urllib.request
-          import urllib.error
 
-          # 獲取當前匯率
           try:
-              with urllib.request.urlopen('https://api.exchangerate-api.com/v4/latest/JPY', timeout=10) as response:
-                  data = json.loads(response.read().decode())
-                  current_rate = data.get('rates', {}).get('TWD', 0.197)
-          except urllib.error.URLError:
-              print("Failed to fetch exchange rate, using default")
-              current_rate = 0.197
-
-          # 讀取現有數據
-          try:
-              with open('data.json', 'r', encoding='utf-8') as f:
-                  expense_data = json.load(f)
+              with urllib.request.urlopen('https://api.exchangerate-api.com/v4/latest/JPY', timeout=10) as r:
+                  rate = json.loads(r.read().decode()).get('rates', {}).get('TWD', 0.197)
           except:
-              print("Failed to load data.json")
-              exit(1)
+              rate = 0.197
 
-          # 更新匯率歷史
-          if 'exchangeRates' not in expense_data:
-              expense_data['exchangeRates'] = []
+          try:
+              with open('rates.json', 'r', encoding='utf-8') as f:
+                  data = json.load(f)
+          except:
+              data = {'rates': []}
 
           today = datetime.utcnow().strftime('%Y-%m-%d')
-          new_rate = {
-              'date': today,
-              'rate': round(current_rate, 4),
-              'source': 'exchangerate-api.com'
-          }
+          data['lastUpdated'] = datetime.utcnow().isoformat() + 'Z'
 
-          # 檢查今天是否已有記錄，有則更新，沒有則添加
-          rate_exists = False
-          for rate in expense_data['exchangeRates']:
-              if rate['date'] == today:
-                  rate['rate'] = new_rate['rate']
-                  rate_exists = True
-                  break
+          existing = next((r for r in data['rates'] if r['date'] == today), None)
+          if existing:
+              existing['rate'] = round(rate, 4)
+          else:
+              data['rates'].insert(0, {'date': today, 'rate': round(rate, 4), 'source': 'exchangerate-api.com'})
 
-          if not rate_exists:
-              expense_data['exchangeRates'].insert(0, new_rate)
+          data['rates'] = data['rates'][:30]
 
-          # 保持最近30條記錄
-          expense_data['exchangeRates'] = expense_data['exchangeRates'][:30]
+          with open('rates.json', 'w', encoding='utf-8') as f:
+              json.dump(data, f, ensure_ascii=False, indent=2)
 
-          # 更新 metadata
-          if 'metadata' not in expense_data:
-              expense_data['metadata'] = {}
-          expense_data['metadata']['lastUpdated'] = datetime.utcnow().isoformat() + 'Z'
-
-          # 重新計算預估台幣
-          if 'expenses' in expense_data:
-              for expense in expense_data['expenses']:
-                  if expense.get('amountJPY', 0) > 0:
-                      expense['estimateTWD'] = round(expense['amountJPY'] * current_rate)
-                      if not expense.get('actualTWD') and expense.get('estimateTWD'):
-                          expense['actualTWD'] = expense['estimateTWD']
-
-          # 寫回文件
-          with open('data.json', 'w', encoding='utf-8') as f:
-              json.dump(expense_data, f, ensure_ascii=False, indent=2)
-
-          print(f"✅ Exchange rate updated: 1 JPY = {current_rate:.4f} TWD")
-          print(f"📝 Updated at: {today}")
+          print(f"✅ 1 JPY = {rate:.4f} TWD ({today})")
           EOF
 
-      - name: Commit and push changes
+      - name: Commit and push
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git config --local core.quotepath false
-          git add data.json
+          git add rates.json
           git diff-index --quiet HEAD || git commit -m "chore: update exchange rate [skip ci]"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PYTHONUTF8: "1"
-          PYTHONIOENCODING: "utf-8"
           LANG: "en_US.UTF-8"
           LC_ALL: "en_US.UTF-8"

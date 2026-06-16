@@ -24,15 +24,86 @@ body {
   min-height: 100vh;
 }
 
+/* Lock Screen */
+.lock-screen {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  padding: 20px;
+}
+.lock-card {
+  background: white;
+  border-radius: 16px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 360px;
+  text-align: center;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+.lock-icon { font-size: 3em; margin-bottom: 12px; }
+.lock-card h2 { font-size: 1.6em; margin-bottom: 6px; color: var(--dark); }
+.lock-subtitle { color: #6b7280; font-size: 0.9em; margin-bottom: 24px; }
+.lock-card input {
+  width: 100%;
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-size: 1em;
+  outline: none;
+  margin-bottom: 12px;
+  box-sizing: border-box;
+  text-align: center;
+  letter-spacing: 2px;
+}
+.lock-card input:focus { border-color: var(--primary); }
+.lock-card button {
+  width: 100%;
+  padding: 12px;
+  background: var(--primary);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1em;
+  font-weight: 600;
+  cursor: pointer;
+}
+.lock-card button:hover { background: #1d4ed8; }
+.lock-error {
+  margin-top: 12px;
+  color: var(--danger);
+  font-size: 0.9em;
+}
+
 /* Header */
 header {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  padding: 30px 24px;
-  text-align: center;
+  padding: 20px 24px;
 }
-header h1 { font-size: 2em; margin-bottom: 6px; }
-header .subtitle { font-size: 0.9em; opacity: 0.85; }
+.header-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 4px;
+}
+header h1 { font-size: 1.8em; }
+header .subtitle { font-size: 0.88em; opacity: 0.85; }
+.lock-btn {
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.82em;
+  transition: background 0.2s;
+  white-space: nowrap;
+}
+.lock-btn:hover { background: rgba(255,255,255,0.3); }
 
 /* Stats */
 .stats {

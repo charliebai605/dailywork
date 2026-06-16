@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>加密工具</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 60px auto; padding: 20px; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0 16px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; box-sizing: border-box; }
+    button { padding: 12px 24px; background: #2563eb; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 1em; }
+    button:hover { background: #1d4ed8; }
+    .result { background: #f3f4f6; padding: 16px; border-radius: 6px; margin-top: 20px; word-break: break-all; font-size: 0.85em; }
+    .success { color: #15803d; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <h2>🔐 初始加密工具</h2>
+  <p>只需要用一次，用來把現有的支出資料加密。</p>
+
+  <label>設定密碼</label>
+  <input type="password" id="password" placeholder="設定你的記帳密碼" />
+
+  <label>確認密碼</label>
+  <input type="password" id="confirm" placeholder="再輸入一次" />
+
+  <label>貼上現有的 data.json 內容</label>
+  <textarea id="plaintext" rows="10" placeholder='貼上 data.json 的完整內容...'></textarea>
+
+  <button onclick="encrypt()">加密</button>
+
+  <div id="output" style="display:none">
+    <p class="success">✅ 加密成功！把以下內容複製，覆蓋你的 data.json：</p>
+    <div class="result"><pre id="result"></pre></div>
+    <button onclick="copy()" style="margin-top:12px; background:#10b981;">複製</button>
+  </div>
+
+  <script>
+    async function encrypt() {
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+      const plaintext = document.getElementById('plaintext').value.trim();
+
+      if (!password) return alert('請輸入密碼');
+      if (password !== confirm) return alert('兩次密碼不一致');
+      if (!plaintext) return alert('請貼上 data.json 內容');
+
+      try {
+        JSON.parse(plaintext); // 驗證 JSON 格式
+      } catch {
+        return alert('data.json 格式錯誤，請確認是正確的 JSON');
+      }
+
+      const salt = crypto.getRandomValues(new Uint8Array(16));
+      const iv = crypto.getRandomValues(new Uint8Array(12));
+
+      const keyMaterial = await crypto.subtle.importKey(
+        'raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']
+      );
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+        keyMaterial,
+        { name: 'AES-GCM', length: 256 },
+        false, ['encrypt']
+      );
+
+      const encrypted = await crypto.subtle.encrypt(
+        { name: 'AES-GCM', iv },
+        key,
+        new TextEncoder().encode(plaintext)
+      );
+
+      const result = {
+        v: 1,
+        salt: btoa(String.fromCharCode(...salt)),
+        iv: btoa(String.fromCharCode(...iv)),
+        data: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+      };
+
+      document.getElementById('result').textContent = JSON.stringify(result, null, 2);
+      document.getElementById('output').style.display = 'block';
+    }
+
+    function copy() {
+      navigator.clipboard.writeText(document.getElementById('result').textContent);
+      alert('已複製！');
+    }
+  </script>
+</body>
+</html>
