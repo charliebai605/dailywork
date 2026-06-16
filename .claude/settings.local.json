@@ -11,7 +11,8 @@
       "Bash(git push *)",
       "Bash(gh repo *)",
       "Bash(gh api *)",
-      "Bash(git commit -m 'feat: 加入 AES-256-GCM 用戶端加密 *)"
+      "Bash(git commit -m 'feat: 加入 AES-256-GCM 用戶端加密 *)",
+      "Bash(git commit -m 'feat: 新增西瓜卡錢包與付款方式追蹤 *)"
     ]
   }
 }

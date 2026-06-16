@@ -158,13 +158,24 @@ class ExpenseTracker {
 
   getFilteredExpenses() {
     const cat = document.getElementById('filter-category')?.value || '';
+    const payment = document.getElementById('filter-payment')?.value || '';
     const status = document.getElementById('filter-status')?.value || '';
     return this.expenses.filter(e => {
       if (cat && e.category !== cat) return false;
+      if (payment && (e.paymentMethod || 'cash') !== payment) return false;
       if (status === 'paid' && !e.isPaid) return false;
       if (status === 'pending' && e.isPaid) return false;
       return true;
     });
+  }
+
+  getSuicaStats() {
+    let topup = 0, spent = 0;
+    this.expenses.forEach(e => {
+      if (e.paymentMethod === 'suica-topup') topup += e.amountJPY || 0;
+      if (e.paymentMethod === 'suica') spent += e.amountJPY || 0;
+    });
+    return { topup, spent, balance: topup - spent };
   }
 
   async saveToGitHub(message) {
@@ -181,10 +192,36 @@ class ExpenseTracker {
 
   render() {
     this.renderStats();
+    this.renderSuicaPanel();
     this.renderCategoryStats();
     this.renderTable();
     const el = document.getElementById('rate-display');
     if (el) el.textContent = this.currentRate.toFixed(4);
+  }
+
+  renderSuicaPanel() {
+    const { topup, spent, balance } = this.getSuicaStats();
+    if (topup === 0) {
+      document.getElementById('suica-panel').innerHTML = '';
+      return;
+    }
+    const pct = topup > 0 ? Math.round((spent / topup) * 100) : 0;
+    const balanceColor = balance < 2000 ? '#ef4444' : balance < 5000 ? '#f59e0b' : '#10b981';
+    document.getElementById('suica-panel').innerHTML = `
+      <div class="suica-card">
+        <div class="suica-header">
+          <span class="suica-title">🚇 西瓜卡</span>
+          <span class="suica-balance" style="color:${balanceColor}">剩餘 ¥${fmt(balance)}</span>
+        </div>
+        <div class="suica-bar-wrap">
+          <div class="suica-bar" style="width:${pct}%; background:${balanceColor}"></div>
+        </div>
+        <div class="suica-details">
+          <span>儲值 ¥${fmt(topup)}</span>
+          <span>已用 ¥${fmt(spent)}</span>
+        </div>
+      </div>
+    `;
   }
 
   renderStats() {
@@ -243,6 +280,7 @@ class ExpenseTracker {
         <td class="date-cell">${fmtDate(e.date)}</td>
         <td><strong>${e.name}</strong></td>
         <td><span class="category-badge ${e.category}">${getCatName(e.category)}</span></td>
+        <td><span class="payment-badge ${e.paymentMethod || 'cash'}">${getPaymentName(e.paymentMethod)}</span></td>
         <td class="amount-cell">${e.amountJPY ? '¥' + fmt(e.amountJPY) : '-'}</td>
         <td class="twd-cell estimate">${e.estimateTWD ? 'NT$' + fmt(e.estimateTWD) : '-'}</td>
         <td class="twd-cell actual">${e.actualTWD ? 'NT$' + fmt(e.actualTWD) : '-'}</td>
@@ -263,7 +301,7 @@ class ExpenseTracker {
       <table>
         <thead>
           <tr>
-            <th>日期</th><th>項目</th><th>分類</th>
+            <th>日期</th><th>項目</th><th>分類</th><th>付款</th>
             <th>JPY</th><th>預估台幣</th><th>實際台幣</th>
             <th>狀態</th><th>備註</th><th></th>
           </tr>
@@ -282,6 +320,10 @@ function fmtDate(s) {
 }
 function getCatName(c) {
   return { Housing: '住宿', Transport: '交通', Food: '食物', Flight: '機票', Other: '其他' }[c] || c;
+}
+
+function getPaymentName(p) {
+  return { cash: '現金', suica: '🚇 西瓜卡', 'suica-topup': '🚇 儲值', card: '💳 信用卡' }[p] || '現金';
 }
 
 function showLockError(msg) {
@@ -326,6 +368,7 @@ function openForm(id = null) {
       document.getElementById('f-name').value = expense.name;
       document.getElementById('f-date').value = expense.date;
       document.getElementById('f-category').value = expense.category;
+      document.getElementById('f-payment').value = expense.paymentMethod || 'cash';
       document.getElementById('f-jpy').value = expense.amountJPY || '';
       document.getElementById('f-twd').value = expense.actualTWD || '';
       document.getElementById('f-paid').checked = expense.isPaid;
@@ -350,6 +393,7 @@ async function saveExpense() {
   const name = document.getElementById('f-name').value.trim();
   const date = document.getElementById('f-date').value;
   const category = document.getElementById('f-category').value;
+  const paymentMethod = document.getElementById('f-payment').value;
   const jpy = parseFloat(document.getElementById('f-jpy').value) || 0;
   const twd = document.getElementById('f-twd').value ? parseFloat(document.getElementById('f-twd').value) : null;
   const isPaid = document.getElementById('f-paid').checked;
@@ -369,12 +413,12 @@ async function saveExpense() {
 
     if (id) {
       const idx = tracker.expenses.findIndex(e => e.id === parseInt(id));
-      if (idx !== -1) tracker.expenses[idx] = { ...tracker.expenses[idx], name, date, category, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes };
+      if (idx !== -1) tracker.expenses[idx] = { ...tracker.expenses[idx], name, date, category, paymentMethod, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes };
       await tracker.saveToGitHub(`編輯支出：${name}`);
       showMsg('✅ 已更新！', 'success');
     } else {
       const newId = Math.max(0, ...tracker.expenses.map(e => e.id)) + 1;
-      tracker.expenses.push({ id: newId, name, date, category, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes });
+      tracker.expenses.push({ id: newId, name, date, category, paymentMethod, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes });
       await tracker.saveToGitHub(`新增支出：${name}`);
       showMsg('✅ 已新增！', 'success');
     }

@@ -31,6 +31,10 @@
         </header>
 
         <div class="stats" id="stats"></div>
+
+        <!-- 西瓜卡餘額 -->
+        <div class="suica-panel" id="suica-panel"></div>
+
         <div class="category-stats" id="category-stats"></div>
 
         <div class="exchange-rate-box">
@@ -54,6 +58,13 @@
                 <option value="Housing">住宿</option>
                 <option value="Flight">機票</option>
                 <option value="Other">其他</option>
+            </select>
+            <select id="filter-payment" onchange="tracker.render()">
+                <option value="">全部付款</option>
+                <option value="cash">現金</option>
+                <option value="suica">西瓜卡</option>
+                <option value="suica-topup">西瓜卡儲值</option>
+                <option value="card">信用卡</option>
             </select>
             <select id="filter-status" onchange="tracker.render()">
                 <option value="">全部狀態</option>
@@ -106,20 +117,32 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label>付款方式</label>
+                    <select id="f-payment">
+                        <option value="cash">現金</option>
+                        <option value="suica">西瓜卡</option>
+                        <option value="suica-topup">西瓜卡儲值</option>
+                        <option value="card">信用卡</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
                     <label>金額 (JPY) <span class="hint">台幣支出填 0</span></label>
                     <input type="number" id="f-jpy" placeholder="0" min="0" />
                 </div>
-            </div>
 
             <div class="form-row">
                 <div class="form-group">
                     <label>實際台幣 <span class="hint">（選填）</span></label>
                     <input type="number" id="f-twd" placeholder="留空則自動預估" min="0" />
                 </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="f-paid" />
-                    <label for="f-paid">已支出</label>
-                </div>
+            </div>
+
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="f-paid" />
+                <label for="f-paid">已支出</label>
             </div>
 
             <div class="form-group">
