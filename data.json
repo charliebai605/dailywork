@@ -1,63 +1,6 @@
 {
-  "metadata": {
-    "title": "記帳啦啦啦",
-    "startDate": "2026-06-14",
-    "endDate": "2026-08-31",
-    "currency": "JPY",
-    "baseCurrency": "TWD",
-    "lastUpdated": "2026-06-16T06:09:57.093Z"
-  },
-  "expenses": [
-    {
-      "id": 1,
-      "name": "來回機票",
-      "date": "2026-06-16",
-      "category": "Flight",
-      "amountJPY": 0,
-      "actualTWD": 21820,
-      "estimateTWD": 21820,
-      "isPaid": true,
-      "notes": "已購買 21820 TWD"
-    },
-    {
-      "id": 2,
-      "name": "山上會館住宿",
-      "date": "2026-06-29",
-      "category": "Housing",
-      "amountJPY": 125000,
-      "actualTWD": null,
-      "estimateTWD": 24625,
-      "isPaid": false,
-      "notes": ""
-    },
-    {
-      "id": 3,
-      "name": "住宿",
-      "date": "2026-07-25",
-      "category": "Housing",
-      "amountJPY": 159300,
-      "actualTWD": null,
-      "estimateTWD": 31382,
-      "isPaid": false,
-      "notes": ""
-    },
-    {
-      "id": 4,
-      "name": "西瓜卡儲值",
-      "date": "2026-06-14",
-      "category": "Transport",
-      "amountJPY": 20000,
-      "actualTWD": null,
-      "estimateTWD": 3940,
-      "isPaid": true,
-      "notes": ""
-    }
-  ],
-  "exchangeRates": [
-    {
-      "date": "2026-06-16",
-      "rate": 0.197,
-      "source": "exchangerate-api.com"
-    }
-  ]
+  "v": 1,
+  "salt": "9/VJIItAI8ZsUaPUY3Hz1w==",
+  "iv": "xkp1sOCc+a7iZPeO",
+  "data": "qU7msGZJuR4VHJC0sFtoqdoffGtdFYKfL/Wj877/ONtNH1kFppVyDrnUGmi1YfEP34Lx81SmryeLogAWCmsCZUFMn+477y7qK0i0yz2AJbsKD949ZhTNJxpOcOs8GarSHiwtjTj8mSUjCkRr7Op3tOamGMPj1umU7tOWufhfr8BZTnGlzWzFUoihLzHxsXw9/swJHy83OA+UN0Ba2Fmx32ureSjFqhV0mNpEAtWWkU4FAfm6QjkhWBEP1VcKJ0eO+zIj8akCMEEtGJAjmrV6cmAQwY3L7F/HU7ALi/LMiNvbhGIfbbZG1X7JDUqq5js/Ccr1V0fF1Xj6fxrZwNnV1Rm27PqhTFKoXe7G9vbP4Tgr7ftVn3j9uZfHURdhoAb9myYDb0wWV22pxVTQ3/na26lGYbRKprYNh5lI1d64ZkSiZrJ94D1ZsMxMTRNaVypNyWmu+taIKuf2Y2zh8IBwA/+cgeTnf9xHaj8xMDJNLvI94sKTiCfltvbKBMbR6GsFhR5JiwbUPRKDnwBZVrznEnGB89rILuDWM0+JoOp/X3oN6zMahlgqYMOCjsZ0YYuey/DLS9axeZxRZuISvVUlNtqPxzvwhUgXeuwBG17RsA0m+OGFXzNItySk3V8Re3vJXcGcW+uvoby222+6C+cadOh2ZU1H7GAankSVhoXDYLMi2YIgA/u+iai2QWsB47/ZeHibZg6QhTBZUnBWM83AbM9+UpQ1gd12E6HbFRxejVciRZyEn/3N2/UI7+qhpURzx8iXKO/1G13EsbxPDnjQp+INmYAXq3FV2hF0lWW9ML8svUdVlb0UDjMojxgT0lsWr9kqkSAkm9JZlnPcmJBka9ElCIPklobT3Krcfo2wuK9hsls2pdUn9R37kTQImec+NedvXR7KHz6S7FTX53FfeK0w1ZRAIeFOWPNVZ5Zf7GkINB2f03PovMR56WaZoDj4LsrKw/jPafUD4VNpB9MJ7Xh1rlI7osv0zV6/usd7CZmxYCGZZbzLZl3J7GuMs8cosKIGw69sUx1mTuwQqqHLDGSwLF4/4awHlOdrcAbUWg1+4ZDWsDS0Rg22YHjio434acCsZpg7IxIjOSmqkBFGOdZXiCIJMr8jJm2uVamQWcMHXlbc2WmJ72QzWQocH/DPZ4e6+N9usSIqa5U50ydPGxMMJcnk9KK/s5t7CnyVFqcfOPnzQ9CBcZ+q+SJTGgl35vMCkF55FWICK8lw9819eLZu1ywa+9HNnSz0ugYOdJLhn8NCkerUkVU="
 }
