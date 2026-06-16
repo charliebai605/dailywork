@@ -132,22 +132,21 @@
                     <label>金額 (JPY) <span class="hint">台幣支出填 0</span></label>
                     <input type="number" id="f-jpy" placeholder="0" min="0" />
                 </div>
-
-            <div class="form-row">
                 <div class="form-group">
                     <label>實際台幣 <span class="hint">（選填）</span></label>
                     <input type="number" id="f-twd" placeholder="留空則自動預估" min="0" />
                 </div>
             </div>
 
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="f-paid" />
-                <label for="f-paid">已支出</label>
-            </div>
-
-            <div class="form-group">
-                <label>備註 <span class="hint">（選填）</span></label>
-                <input type="text" id="f-notes" placeholder="備註說明" />
+            <div class="form-row">
+                <div class="form-group">
+                    <label>備註 <span class="hint">（選填）</span></label>
+                    <input type="text" id="f-notes" placeholder="備註說明" />
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="f-paid" checked />
+                    <label for="f-paid">已支出</label>
+                </div>
             </div>
 
             <div class="form-group">

@@ -354,7 +354,7 @@ function openForm(id = null) {
   document.getElementById('f-category').value = 'Food';
   document.getElementById('f-jpy').value = '';
   document.getElementById('f-twd').value = '';
-  document.getElementById('f-paid').checked = false;
+  document.getElementById('f-paid').checked = true;
   document.getElementById('f-notes').value = '';
   document.getElementById('form-msg').style.display = 'none';
 
