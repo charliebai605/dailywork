@@ -21,6 +21,11 @@ jobs:
           python-version: '3.9'
 
       - name: Update exchange rate
+        env:
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+          LANG: "en_US.UTF-8"
+          LC_ALL: "en_US.UTF-8"
         run: |
           python3 << 'EOF'
           import json
@@ -95,8 +100,13 @@ jobs:
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
+          git config --local core.quotepath false
           git add data.json
           git diff-index --quiet HEAD || git commit -m "chore: update exchange rate [skip ci]"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PYTHONUTF8: "1"
+          PYTHONIOENCODING: "utf-8"
+          LANG: "en_US.UTF-8"
+          LC_ALL: "en_US.UTF-8"

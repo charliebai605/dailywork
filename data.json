@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "title": "æ¥æ¬å¯¦ç¿æ¯åºè¨å¸³",
+    "title": "日本實習支出記帳",
     "startDate": "2026-06-14",
     "endDate": "2026-07-31",
     "currency": "JPY",
@@ -10,18 +10,18 @@
   "expenses": [
     {
       "id": 1,
-      "name": "ä¾åæ©ç¥¨",
+      "name": "來回機票",
       "date": "2026-06-16",
       "category": "Flight",
       "amountJPY": 0,
       "actualTWD": 21820,
       "estimateTWD": 21820,
       "isPaid": true,
-      "notes": "å·²è³¼è²· 21820 TWD"
+      "notes": "已購買 21820 TWD"
     },
     {
       "id": 2,
-      "name": "å±±ä¸æé¤¨ä½å®¿",
+      "name": "山上會館住宿",
       "date": "2026-06-29",
       "category": "Housing",
       "amountJPY": 125000,
@@ -32,7 +32,7 @@
     },
     {
       "id": 3,
-      "name": "ä½å®¿",
+      "name": "住宿",
       "date": "2026-07-25",
       "category": "Housing",
       "amountJPY": 159300,
@@ -43,23 +43,12 @@
     },
     {
       "id": 4,
-      "name": "è¥¿çå¡å²å¼",
+      "name": "西瓜卡儲值",
       "date": "2026-06-14",
       "category": "Transport",
       "amountJPY": 20000,
       "actualTWD": null,
       "estimateTWD": 3940,
-      "isPaid": true,
-      "notes": ""
-    },
-    {
-      "id": 5,
-      "name": "Lawson test",
-      "date": "2026-06-16",
-      "category": "Food",
-      "amountJPY": 10,
-      "actualTWD": null,
-      "estimateTWD": 2,
       "isPaid": true,
       "notes": ""
     }
