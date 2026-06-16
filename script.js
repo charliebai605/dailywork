@@ -1,3 +1,8 @@
+const OWNER = 'charliebai605';
+const REPO = 'dailywork';
+const FILE = 'data.json';
+const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+
 class ExpenseTracker {
   constructor() {
     this.data = null;
@@ -10,7 +15,6 @@ class ExpenseTracker {
     await this.updateExchangeRate();
     this.recalculateEstimates();
     this.render();
-    this.setupEventListeners();
   }
 
   async loadData() {
@@ -19,7 +23,6 @@ class ExpenseTracker {
       const text = await response.text();
       this.data = JSON.parse(text);
     } catch (error) {
-      console.error('Failed to load data:', error);
       this.data = { expenses: [], exchangeRates: [], metadata: {} };
     }
   }
@@ -27,349 +30,246 @@ class ExpenseTracker {
   async updateExchangeRate() {
     try {
       const btn = document.querySelector('.refresh-btn');
-      if (btn) btn.classList.add('loading');
+      if (btn) { btn.disabled = true; btn.textContent = '更新中...'; }
 
-      const response = await fetch('https://api.exchangerate-api.com/v4/latest/JPY', {
-        headers: { 'Accept': 'application/json' }
-      });
-
-      const data = await response.json();
+      const res = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+      const data = await res.json();
       this.currentRate = data.rates?.TWD || 0.197;
 
-      // 更新metadata中的汇率
       if (!this.data.metadata) this.data.metadata = {};
       this.data.metadata.lastUpdated = new Date().toISOString();
 
-      // 添加到历史记录
       if (!this.data.exchangeRates) this.data.exchangeRates = [];
-      this.data.exchangeRates.unshift({
-        date: new Date().toISOString().split('T')[0],
-        rate: this.currentRate,
-        source: 'exchangerate-api.com'
-      });
+      const today = new Date().toISOString().split('T')[0];
+      const existing = this.data.exchangeRates.find(r => r.date === today);
+      if (existing) {
+        existing.rate = this.currentRate;
+      } else {
+        this.data.exchangeRates.unshift({ date: today, rate: this.currentRate, source: 'exchangerate-api.com' });
+        this.data.exchangeRates = this.data.exchangeRates.slice(0, 30);
+      }
 
-      // 保持最近30条记录
-      this.data.exchangeRates = this.data.exchangeRates.slice(0, 30);
-
-      if (btn) btn.classList.remove('loading');
-      this.showNotification('✅ 匯率已更新', 'success');
-    } catch (error) {
-      console.error('Failed to update exchange rate:', error);
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 更新匯率'; }
+    } catch {
       const btn = document.querySelector('.refresh-btn');
-      if (btn) btn.classList.remove('loading');
-      this.showNotification('⚠️ 無法更新匯率', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🔄 更新匯率'; }
     }
   }
 
   recalculateEstimates() {
-    if (!this.data.expenses) return;
-
-    this.data.expenses.forEach(expense => {
-      // 計算預估台幣（用當前匯率）
-      if (expense.amountJPY > 0) {
-        expense.estimateTWD = Math.round(expense.amountJPY * this.currentRate);
-      }
-      // 如果沒有實際台幣，用預估值
-      if (!expense.actualTWD && expense.estimateTWD) {
-        expense.actualTWD = expense.estimateTWD;
-      }
+    if (!this.data?.expenses) return;
+    this.data.expenses.forEach(e => {
+      if (e.amountJPY > 0) e.estimateTWD = Math.round(e.amountJPY * this.currentRate);
     });
   }
 
-  getStats() {
-    const stats = {
-      totalJPY: 0,
-      totalEstimateTWD: 0,
-      paidTWD: 0,
-      pendingTWD: 0,
-      pendingCount: 0
-    };
-
-    if (!this.data.expenses) return stats;
-
-    this.data.expenses.forEach(expense => {
-      stats.totalJPY += expense.amountJPY || 0;
-
-      const amount = expense.actualTWD || expense.estimateTWD || 0;
-      stats.totalEstimateTWD += amount;
-
-      if (expense.isPaid) {
-        stats.paidTWD += amount;
-      } else {
-        stats.pendingTWD += amount;
-        stats.pendingCount += 1;
-      }
+  getFilteredExpenses() {
+    const cat = document.getElementById('filter-category')?.value || '';
+    const status = document.getElementById('filter-status')?.value || '';
+    return (this.data?.expenses || []).filter(e => {
+      if (cat && e.category !== cat) return false;
+      if (status === 'paid' && !e.isPaid) return false;
+      if (status === 'pending' && e.isPaid) return false;
+      return true;
     });
-
-    return stats;
   }
 
   render() {
     this.renderStats();
-    this.renderExchangeRate();
+    this.renderCategoryStats();
     this.renderTable();
     this.renderFooter();
+    const el = document.getElementById('rate-display');
+    if (el) el.textContent = this.currentRate.toFixed(4);
   }
 
   renderStats() {
-    const stats = this.getStats();
-    const statsHtml = `
+    const all = this.data?.expenses || [];
+    let paid = 0, pending = 0;
+    all.forEach(e => {
+      const amt = e.actualTWD || e.estimateTWD || 0;
+      if (e.isPaid) paid += amt; else pending += amt;
+    });
+    document.getElementById('stats').innerHTML = `
       <div class="stat-card paid">
         <div class="stat-label">已支出</div>
-        <div class="stat-value">NT$${this.formatNumber(stats.paidTWD)}</div>
+        <div class="stat-value">NT$${fmt(paid)}</div>
       </div>
       <div class="stat-card pending">
-        <div class="stat-label">未來支出</div>
-        <div class="stat-value">NT$${this.formatNumber(stats.pendingTWD)}</div>
-        <div class="stat-label" style="margin-top: 10px; font-size: 0.8em;">
-          (${stats.pendingCount} 筆)
-        </div>
+        <div class="stat-label">未來支出 (${all.filter(e=>!e.isPaid).length} 筆)</div>
+        <div class="stat-value">NT$${fmt(pending)}</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">總支出</div>
-        <div class="stat-value">NT$${this.formatNumber(stats.totalEstimateTWD)}</div>
+        <div class="stat-label">總計</div>
+        <div class="stat-value">NT$${fmt(paid + pending)}</div>
       </div>
     `;
-
-    const statsContainer = document.querySelector('.stats');
-    if (statsContainer) {
-      statsContainer.innerHTML = statsHtml;
-    }
   }
 
-  renderExchangeRate() {
-    const rateHtml = `
-      <div class="exchange-rate-info">
-        <div>
-          <div class="rate-label">當前匯率 (JPY → TWD)</div>
-          <div class="rate-value">1 JPY = <span id="rate-display">${this.currentRate.toFixed(4)}</span> TWD</div>
-        </div>
-      </div>
-      <button class="refresh-btn" onclick="tracker.updateExchangeRate(); tracker.recalculateEstimates(); tracker.render();">
-        🔄 更新匯率
-      </button>
-    `;
+  renderCategoryStats() {
+    const all = this.data?.expenses || [];
+    const map = {};
+    all.forEach(e => {
+      const amt = e.actualTWD || e.estimateTWD || 0;
+      map[e.category] = (map[e.category] || 0) + amt;
+    });
+    const sorted = Object.entries(map).sort((a, b) => b[1] - a[1]);
+    const total = sorted.reduce((s, [, v]) => s + v, 0);
 
-    const rateBox = document.querySelector('.exchange-rate-box');
-    if (rateBox) {
-      rateBox.innerHTML = rateHtml;
-    }
+    document.getElementById('category-stats').innerHTML = sorted.map(([cat, amt]) => `
+      <div class="cat-item">
+        <span class="category-badge ${cat}">${getCatName(cat)}</span>
+        <div class="cat-bar-wrap">
+          <div class="cat-bar" style="width:${total ? Math.round(amt/total*100) : 0}%"></div>
+        </div>
+        <span class="cat-amt">NT$${fmt(amt)}</span>
+      </div>
+    `).join('');
   }
 
   renderTable() {
-    if (!this.data.expenses || this.data.expenses.length === 0) {
-      const tableWrapper = document.querySelector('.table-wrapper');
-      if (tableWrapper) {
-        tableWrapper.innerHTML = '<p style="text-align: center; padding: 40px; color: #6b7280;">沒有記錄</p>';
-      }
+    const expenses = this.getFilteredExpenses()
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    if (!expenses.length) {
+      document.getElementById('table-wrapper').innerHTML =
+        '<p style="text-align:center;padding:40px;color:#6b7280;">沒有符合條件的記錄</p>';
       return;
     }
 
-    // 按日期排序
-    const sorted = [...this.data.expenses].sort((a, b) => new Date(a.date) - new Date(b.date));
-
-    const rows = sorted.map(expense => `
+    const rows = expenses.map(e => `
       <tr>
-        <td class="date-cell">${this.formatDate(expense.date)}</td>
-        <td><strong>${expense.name}</strong></td>
-        <td><span class="category-badge ${expense.category}">${this.getCategoryName(expense.category)}</span></td>
-        <td class="amount-cell">¥${this.formatNumber(expense.amountJPY)}</td>
-        <td class="twd-cell estimate">
-          ${expense.estimateTWD ? `NT$${this.formatNumber(expense.estimateTWD)}` : '-'}
-        </td>
-        <td class="twd-cell actual">
-          ${expense.actualTWD ? `NT$${this.formatNumber(expense.actualTWD)}` : '-'}
-        </td>
+        <td class="date-cell">${fmtDate(e.date)}</td>
+        <td><strong>${e.name}</strong></td>
+        <td><span class="category-badge ${e.category}">${getCatName(e.category)}</span></td>
+        <td class="amount-cell">${e.amountJPY ? '¥' + fmt(e.amountJPY) : '-'}</td>
+        <td class="twd-cell estimate">${e.estimateTWD ? 'NT$' + fmt(e.estimateTWD) : '-'}</td>
+        <td class="twd-cell actual">${e.actualTWD ? 'NT$' + fmt(e.actualTWD) : '-'}</td>
         <td>
-          <span class="status-badge ${expense.isPaid ? 'paid' : 'pending'}">
-            ${expense.isPaid ? '✓ 已支出' : '⏳ 未支出'}
-          </span>
+          <button class="status-badge ${e.isPaid ? 'paid' : 'pending'}" onclick="togglePaid(${e.id})" title="點擊切換">
+            ${e.isPaid ? '✓ 已支出' : '⏳ 未支出'}
+          </button>
         </td>
-        <td class="notes">${expense.notes || '-'}</td>
-        <td>
-          <button class="delete-btn" onclick="deleteExpense(${expense.id}, '${expense.name}')">🗑️</button>
+        <td class="notes">${e.notes || '-'}</td>
+        <td class="action-cell">
+          <button class="edit-btn" onclick="openForm(${e.id})" title="編輯">✏️</button>
+          <button class="delete-btn" onclick="deleteExpense(${e.id}, '${e.name.replace(/'/g, "\\'")}')" title="刪除">🗑️</button>
         </td>
       </tr>
     `).join('');
 
-    const tableHtml = `
+    document.getElementById('table-wrapper').innerHTML = `
       <table>
         <thead>
           <tr>
-            <th>日期</th>
-            <th>項目</th>
-            <th>分類</th>
-            <th>金額 (JPY)</th>
-            <th>預估台幣</th>
-            <th>實際台幣</th>
-            <th>狀態</th>
-            <th>備註</th>
-            <th></th>
+            <th>日期</th><th>項目</th><th>分類</th>
+            <th>JPY</th><th>預估台幣</th><th>實際台幣</th>
+            <th>狀態</th><th>備註</th><th></th>
           </tr>
         </thead>
-        <tbody>
-          ${rows}
-        </tbody>
+        <tbody>${rows}</tbody>
       </table>
     `;
-
-    const tableWrapper = document.querySelector('.table-wrapper');
-    if (tableWrapper) {
-      tableWrapper.innerHTML = tableHtml;
-    }
   }
 
   renderFooter() {
-    if (!this.data.metadata) return;
-
-    const lastUpdated = this.data.metadata.lastUpdated
-      ? new Date(this.data.metadata.lastUpdated).toLocaleString('zh-TW')
-      : '未知';
-
-    const footerHtml = `
-      <div class="last-updated">
-        ⏰ 上次更新: ${lastUpdated}
-      </div>
-      <div>
-        💾 數據來源: data.json | 匯率來源: exchangerate-api.com
-      </div>
-    `;
-
-    const footer = document.querySelector('footer');
-    if (footer) {
-      footer.innerHTML = footerHtml;
-    }
-  }
-
-  setupEventListeners() {
-    // 刷新頁面時自動更新匯率
-    window.addEventListener('focus', () => {
-      this.updateExchangeRate().then(() => {
-        this.recalculateEstimates();
-        this.render();
-      });
-    });
-  }
-
-  showNotification(message, type = 'info') {
-    // 簡單的通知顯示
-    console.log(`[${type.toUpperCase()}] ${message}`);
-  }
-
-  formatDate(dateString) {
-    const date = new Date(dateString + 'T00:00:00');
-    return date.toLocaleDateString('zh-TW', { month: '2-digit', day: '2-digit' });
-  }
-
-  formatNumber(num) {
-    return Math.round(num).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  }
-
-  getCategoryName(category) {
-    const names = {
-      Housing: '住宿',
-      Transport: '交通',
-      Food: '食物',
-      Flight: '機票',
-      Other: '其他'
-    };
-    return names[category] || category;
+    const last = this.data?.metadata?.lastUpdated;
+    const el = document.getElementById('last-updated');
+    if (el && last) el.textContent = `⏰ 上次更新: ${new Date(last).toLocaleString('zh-TW')}`;
   }
 }
 
-let tracker;
-document.addEventListener('DOMContentLoaded', () => {
-  tracker = new ExpenseTracker();
+// === 工具函數 ===
+function fmt(n) { return Math.round(n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtDate(s) {
+  const d = new Date(s + 'T00:00:00');
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function getCatName(c) {
+  return { Housing:'住宿', Transport:'交通', Food:'食物', Flight:'機票', Other:'其他' }[c] || c;
+}
 
-  // 設置今天的日期為預設
+function getToken() {
+  const t = localStorage.getItem('github_token');
+  if (t) return t;
+  const el = document.getElementById('f-token');
+  return el ? el.value.trim() : '';
+}
+
+async function githubGet() {
+  const token = getToken();
+  if (!token) throw new Error('請先輸入 GitHub Token');
+  const res = await fetch(API, {
+    headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
+  });
+  if (!res.ok) throw new Error('無法取得資料，請確認 Token 是否正確');
+  const file = await res.json();
+  const content = JSON.parse(decodeURIComponent(escape(atob(file.content.replace(/\n/g, '')))));
+  return { content, sha: file.sha, token };
+}
+
+async function githubPut(content, sha, token, message) {
+  const res = await fetch(API, {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github+json',
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      message,
+      content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+      sha
+    })
+  });
+  if (!res.ok) throw new Error('儲存失敗');
+}
+
+// === Modal 控制 ===
+function openForm(id = null) {
   const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-id').value = id || '';
+  document.getElementById('f-name').value = '';
   document.getElementById('f-date').value = today;
+  document.getElementById('f-category').value = 'Food';
+  document.getElementById('f-jpy').value = '';
+  document.getElementById('f-twd').value = '';
+  document.getElementById('f-paid').checked = false;
+  document.getElementById('f-notes').value = '';
+  document.getElementById('form-msg').style.display = 'none';
 
-  // 從 localStorage 讀取儲存的 token
   const savedToken = localStorage.getItem('github_token');
-  if (savedToken) {
-    document.getElementById('f-token').value = savedToken;
+  if (savedToken) document.getElementById('f-token').value = savedToken;
+
+  if (id) {
+    // 編輯模式：填入現有資料
+    const expense = tracker.data.expenses.find(e => e.id === id);
+    if (expense) {
+      document.getElementById('modal-title').textContent = '編輯支出';
+      document.getElementById('f-name').value = expense.name;
+      document.getElementById('f-date').value = expense.date;
+      document.getElementById('f-category').value = expense.category;
+      document.getElementById('f-jpy').value = expense.amountJPY || '';
+      document.getElementById('f-twd').value = expense.actualTWD || '';
+      document.getElementById('f-paid').checked = expense.isPaid;
+      document.getElementById('f-notes').value = expense.notes || '';
+    }
+  } else {
+    document.getElementById('modal-title').textContent = '新增支出';
   }
-});
 
-async function deleteExpense(id, name) {
-  if (!confirm(`確定要刪除「${name}」嗎？`)) return;
-
-  const token = localStorage.getItem('github_token');
-  if (!token) {
-    alert('請先在新增支出表單中輸入 GitHub Token');
-    toggleForm();
-    return;
-  }
-
-  const OWNER = 'charliebai605';
-  const REPO = 'dailywork';
-  const FILE = 'data.json';
-  const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
-
-  try {
-    const getRes = await fetch(API, {
-      headers: { 'Authorization': `Bearer ${token}`, 'Accept': 'application/vnd.github+json' }
-    });
-
-    if (!getRes.ok) throw new Error('無法取得資料');
-
-    const fileData = await getRes.json();
-    const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, '')))));
-
-    content.expenses = content.expenses.filter(e => e.id !== id);
-    content.metadata.lastUpdated = new Date().toISOString();
-
-    const putRes = await fetch(API, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: `刪除支出：${name}`,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))).replace(/\n/g, ''),
-        sha: fileData.sha
-      })
-    });
-
-    if (!putRes.ok) throw new Error('刪除失敗');
-
-    tracker.data = content;
-    tracker.recalculateEstimates();
-    tracker.render();
-
-  } catch (err) {
-    alert(`❌ ${err.message}`);
-  }
+  document.getElementById('modal-overlay').style.display = 'flex';
+  document.getElementById('f-name').focus();
 }
 
-function toggleForm() {
-  const form = document.getElementById('add-form');
-  const isHidden = form.style.display === 'none';
-  form.style.display = isHidden ? 'block' : 'none';
-
-  if (isHidden) {
-    document.getElementById('f-name').focus();
-    clearFormMsg();
-  }
+function closeModal(e) {
+  if (e && e.target !== document.getElementById('modal-overlay')) return;
+  document.getElementById('modal-overlay').style.display = 'none';
 }
 
-function clearFormMsg() {
-  const msg = document.getElementById('form-msg');
-  msg.style.display = 'none';
-  msg.innerHTML = '';
-}
-
-function showFormMsg(text, type) {
-  const msg = document.getElementById('form-msg');
-  msg.className = type === 'success' ? 'msg-success' : 'msg-error';
-  msg.innerHTML = text;
-  msg.style.display = 'block';
-}
-
-async function addExpense() {
+// === CRUD ===
+async function saveExpense() {
+  const id = document.getElementById('f-id').value;
   const name = document.getElementById('f-name').value.trim();
   const date = document.getElementById('f-date').value;
   const category = document.getElementById('f-category').value;
@@ -379,96 +279,107 @@ async function addExpense() {
   const notes = document.getElementById('f-notes').value.trim();
   const token = document.getElementById('f-token').value.trim();
 
-  if (!name) return showFormMsg('❌ 請填寫項目名稱', 'error');
-  if (!date) return showFormMsg('❌ 請填寫日期', 'error');
-  if (!token) return showFormMsg('❌ 請填寫 GitHub Token', 'error');
-
-  // 儲存 token 到 localStorage
+  if (!name) return showMsg('❌ 請填寫項目名稱', 'error');
+  if (!date) return showMsg('❌ 請填寫日期', 'error');
+  if (!token) return showMsg('❌ 請填寫 GitHub Token', 'error');
   localStorage.setItem('github_token', token);
 
-  const submitBtn = document.querySelector('.submit-btn');
-  submitBtn.disabled = true;
-  submitBtn.textContent = '儲存中...';
+  const btn = document.querySelector('.submit-btn');
+  btn.disabled = true; btn.textContent = '儲存中...';
 
   try {
-    // 從 GitHub 取得最新 data.json
-    const OWNER = 'charliebai605';
-    const REPO = 'dailywork';
-    const FILE = 'data.json';
-    const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
-
-    const getRes = await fetch(API, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json'
-      }
-    });
-
-    if (!getRes.ok) {
-      const err = await getRes.json();
-      throw new Error(err.message || '無法取得資料');
-    }
-
-    const fileData = await getRes.json();
-    const content = JSON.parse(decodeURIComponent(escape(atob(fileData.content.replace(/\n/g, '')))));
-
-    // 計算預估台幣
+    const { content, sha } = await githubGet();
     const estimateTWD = jpy > 0 ? Math.round(jpy * tracker.currentRate) : (twd || 0);
 
-    // 新增記錄
-    const newId = Math.max(...content.expenses.map(e => e.id), 0) + 1;
-    content.expenses.push({
-      id: newId,
-      name,
-      date,
-      category,
-      amountJPY: jpy,
-      actualTWD: twd,
-      estimateTWD,
-      isPaid,
-      notes
-    });
-
-    content.metadata.lastUpdated = new Date().toISOString();
-
-    // 推送回 GitHub
-    const putRes = await fetch(API, {
-      method: 'PUT',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/vnd.github+json',
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        message: `新增支出：${name}`,
-        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))).replace(/\n/g, ''),
-        sha: fileData.sha
-      })
-    });
-
-    if (!putRes.ok) {
-      const err = await putRes.json();
-      throw new Error(err.message || '儲存失敗');
+    if (id) {
+      // 編輯
+      const idx = content.expenses.findIndex(e => e.id === parseInt(id));
+      if (idx !== -1) {
+        content.expenses[idx] = { ...content.expenses[idx], name, date, category, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes };
+      }
+      await githubPut(content, sha, token, `編輯支出：${name}`);
+      showMsg('✅ 已更新！', 'success');
+    } else {
+      // 新增
+      const newId = Math.max(0, ...content.expenses.map(e => e.id)) + 1;
+      content.expenses.push({ id: newId, name, date, category, amountJPY: jpy, actualTWD: twd, estimateTWD, isPaid, notes });
+      content.metadata.lastUpdated = new Date().toISOString();
+      await githubPut(content, sha, token, `新增支出：${name}`);
+      showMsg('✅ 已新增！', 'success');
     }
 
-    // 更新本地資料
     tracker.data = content;
     tracker.recalculateEstimates();
     tracker.render();
-
-    showFormMsg('✅ 已成功新增！', 'success');
-
-    // 清空表單
-    document.getElementById('f-name').value = '';
-    document.getElementById('f-jpy').value = '';
-    document.getElementById('f-twd').value = '';
-    document.getElementById('f-notes').value = '';
-    document.getElementById('f-paid').checked = false;
-
+    setTimeout(() => closeModal(), 800);
   } catch (err) {
-    showFormMsg(`❌ ${err.message}`, 'error');
+    showMsg(`❌ ${err.message}`, 'error');
   } finally {
-    submitBtn.disabled = false;
-    submitBtn.textContent = '儲存';
+    btn.disabled = false; btn.textContent = '儲存';
   }
 }
+
+async function deleteExpense(id, name) {
+  if (!confirm(`確定要刪除「${name}」嗎？`)) return;
+  const token = getToken();
+  if (!token) { openForm(); return; }
+
+  try {
+    const { content, sha } = await githubGet();
+    content.expenses = content.expenses.filter(e => e.id !== id);
+    content.metadata.lastUpdated = new Date().toISOString();
+    await githubPut(content, sha, token, `刪除支出：${name}`);
+    tracker.data = content;
+    tracker.recalculateEstimates();
+    tracker.render();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+async function togglePaid(id) {
+  const token = getToken();
+  if (!token) { alert('請先在表單中輸入 GitHub Token'); openForm(); return; }
+
+  try {
+    const { content, sha } = await githubGet();
+    const exp = content.expenses.find(e => e.id === id);
+    if (!exp) return;
+    exp.isPaid = !exp.isPaid;
+    content.metadata.lastUpdated = new Date().toISOString();
+    await githubPut(content, sha, token, `更新狀態：${exp.name}`);
+    tracker.data = content;
+    tracker.render();
+  } catch (err) {
+    alert(`❌ ${err.message}`);
+  }
+}
+
+// === 匯出 CSV ===
+function exportCSV() {
+  const expenses = tracker.data?.expenses || [];
+  const header = ['日期', '項目', '分類', '金額(JPY)', '預估台幣', '實際台幣', '已支出', '備註'];
+  const rows = expenses.map(e => [
+    e.date, e.name, getCatName(e.category),
+    e.amountJPY || 0, e.estimateTWD || 0, e.actualTWD || '',
+    e.isPaid ? '是' : '否', e.notes || ''
+  ]);
+  const csv = [header, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `支出記帳_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('form-msg');
+  el.className = type === 'success' ? 'msg-success' : 'msg-error';
+  el.textContent = text;
+  el.style.display = 'block';
+}
+
+let tracker;
+document.addEventListener('DOMContentLoaded', () => {
+  tracker = new ExpenseTracker();
+});
