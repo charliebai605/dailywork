@@ -352,6 +352,7 @@ function openForm(id = null) {
   document.getElementById('f-name').value = '';
   document.getElementById('f-date').value = today;
   document.getElementById('f-category').value = 'Food';
+  document.getElementById('f-payment').value = 'cash';
   document.getElementById('f-jpy').value = '';
   document.getElementById('f-twd').value = '';
   document.getElementById('f-paid').checked = true;
