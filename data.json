@@ -1,0 +1,63 @@
+{
+  "metadata": {
+    "title": "日本實習支出記帳",
+    "startDate": "2026-06-14",
+    "endDate": "2026-07-31",
+    "currency": "JPY",
+    "baseCurrency": "TWD",
+    "lastUpdated": "2026-06-16T05:30:00Z"
+  },
+  "expenses": [
+    {
+      "id": 1,
+      "name": "來回機票",
+      "date": "2026-06-16",
+      "category": "Flight",
+      "amountJPY": 0,
+      "actualTWD": 21820,
+      "estimateTWD": 21820,
+      "isPaid": true,
+      "notes": "已購買 21820 TWD"
+    },
+    {
+      "id": 2,
+      "name": "山上會館住宿",
+      "date": "2026-06-29",
+      "category": "Housing",
+      "amountJPY": 125000,
+      "actualTWD": null,
+      "estimateTWD": null,
+      "isPaid": false,
+      "notes": ""
+    },
+    {
+      "id": 3,
+      "name": "住宿",
+      "date": "2026-07-25",
+      "category": "Housing",
+      "amountJPY": 159300,
+      "actualTWD": null,
+      "estimateTWD": null,
+      "isPaid": false,
+      "notes": ""
+    },
+    {
+      "id": 4,
+      "name": "西瓜卡儲值",
+      "date": "2026-06-14",
+      "category": "Transport",
+      "amountJPY": 20000,
+      "actualTWD": null,
+      "estimateTWD": null,
+      "isPaid": true,
+      "notes": ""
+    }
+  ],
+  "exchangeRates": [
+    {
+      "date": "2026-06-16",
+      "rate": 0.197,
+      "source": "exchangerate-api.com"
+    }
+  ]
+}

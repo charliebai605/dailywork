@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://api.notion.com/v1/databases -H 'Authorization: Bearer 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' -H 'Notion-Version: 2026-03-11')",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s https://api.notion.com/v1/databases/ad54238c93cb40cdb5a7c9259d71f54e/query -X POST -H 'Authorization: Bearer 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' -H 'Notion-Version: 2026-03-11' -H 'Content-Type: application/json' -d '{\"page_size\": 3}')",
+      "Bash(python3 *)",
+      "Bash(curl -s https://api.notion.com/v1/databases/3f77ded4-caef-4838-95a1-c0b6f641897a -H 'Authorization: Bearer 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' -H 'Notion-Version: 2026-03-11')"
+    ]
+  }
+}
