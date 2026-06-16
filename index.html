@@ -67,6 +67,74 @@
             </div>
         </div>
 
+        <!-- 新增支出按鈕 -->
+        <div style="padding: 0 30px 30px;">
+            <button class="add-btn" onclick="toggleForm()">＋ 新增支出</button>
+        </div>
+
+        <!-- 新增支出表單 -->
+        <div id="add-form" style="display:none; padding: 0 30px 30px;">
+            <div class="form-card">
+                <h3 style="margin-bottom: 20px;">新增支出</h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>項目名稱</label>
+                        <input type="text" id="f-name" placeholder="例：便利商店" />
+                    </div>
+                    <div class="form-group">
+                        <label>日期</label>
+                        <input type="date" id="f-date" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>分類</label>
+                        <select id="f-category">
+                            <option value="Food">食物</option>
+                            <option value="Transport">交通</option>
+                            <option value="Housing">住宿</option>
+                            <option value="Flight">機票</option>
+                            <option value="Other">其他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>金額 (JPY) <span style="color:#6b7280; font-size:0.85em;">台幣支出填 0</span></label>
+                        <input type="number" id="f-jpy" placeholder="0" min="0" />
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>實際台幣 <span style="color:#6b7280; font-size:0.85em;">（選填）</span></label>
+                        <input type="number" id="f-twd" placeholder="留空則自動預估" min="0" />
+                    </div>
+                    <div class="form-group" style="display:flex; align-items:center; gap:10px; padding-top:24px;">
+                        <input type="checkbox" id="f-paid" style="width:18px; height:18px; cursor:pointer;" />
+                        <label for="f-paid" style="margin:0; cursor:pointer;">已支出</label>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>備註 <span style="color:#6b7280; font-size:0.85em;">（選填）</span></label>
+                    <input type="text" id="f-notes" placeholder="備註說明" />
+                </div>
+
+                <div class="form-group">
+                    <label>GitHub Token <span style="color:#6b7280; font-size:0.85em;">（會記住，不用每次輸入）</span></label>
+                    <input type="password" id="f-token" placeholder="ghp_xxxx 或 gho_xxxx" />
+                </div>
+
+                <div style="display:flex; gap:10px; margin-top:10px;">
+                    <button class="submit-btn" onclick="addExpense()">儲存</button>
+                    <button class="cancel-btn" onclick="toggleForm()">取消</button>
+                </div>
+
+                <div id="form-msg" style="margin-top:15px; display:none;"></div>
+            </div>
+        </div>
+
         <footer>
             <div class="last-updated">⏰ 上次更新: -</div>
             <div>💾 數據來源: data.json | 匯率來源: exchangerate-api.com</div>

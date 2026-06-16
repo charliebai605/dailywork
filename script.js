@@ -275,4 +275,142 @@ class ExpenseTracker {
 let tracker;
 document.addEventListener('DOMContentLoaded', () => {
   tracker = new ExpenseTracker();
+
+  // 設置今天的日期為預設
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('f-date').value = today;
+
+  // 從 localStorage 讀取儲存的 token
+  const savedToken = localStorage.getItem('github_token');
+  if (savedToken) {
+    document.getElementById('f-token').value = savedToken;
+  }
 });
+
+function toggleForm() {
+  const form = document.getElementById('add-form');
+  const isHidden = form.style.display === 'none';
+  form.style.display = isHidden ? 'block' : 'none';
+
+  if (isHidden) {
+    document.getElementById('f-name').focus();
+    clearFormMsg();
+  }
+}
+
+function clearFormMsg() {
+  const msg = document.getElementById('form-msg');
+  msg.style.display = 'none';
+  msg.innerHTML = '';
+}
+
+function showFormMsg(text, type) {
+  const msg = document.getElementById('form-msg');
+  msg.className = type === 'success' ? 'msg-success' : 'msg-error';
+  msg.innerHTML = text;
+  msg.style.display = 'block';
+}
+
+async function addExpense() {
+  const name = document.getElementById('f-name').value.trim();
+  const date = document.getElementById('f-date').value;
+  const category = document.getElementById('f-category').value;
+  const jpy = parseFloat(document.getElementById('f-jpy').value) || 0;
+  const twd = document.getElementById('f-twd').value ? parseFloat(document.getElementById('f-twd').value) : null;
+  const isPaid = document.getElementById('f-paid').checked;
+  const notes = document.getElementById('f-notes').value.trim();
+  const token = document.getElementById('f-token').value.trim();
+
+  if (!name) return showFormMsg('❌ 請填寫項目名稱', 'error');
+  if (!date) return showFormMsg('❌ 請填寫日期', 'error');
+  if (!token) return showFormMsg('❌ 請填寫 GitHub Token', 'error');
+
+  // 儲存 token 到 localStorage
+  localStorage.setItem('github_token', token);
+
+  const submitBtn = document.querySelector('.submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = '儲存中...';
+
+  try {
+    // 從 GitHub 取得最新 data.json
+    const OWNER = 'charliebai605';
+    const REPO = 'dailywork';
+    const FILE = 'data.json';
+    const API = `https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`;
+
+    const getRes = await fetch(API, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json'
+      }
+    });
+
+    if (!getRes.ok) {
+      const err = await getRes.json();
+      throw new Error(err.message || '無法取得資料');
+    }
+
+    const fileData = await getRes.json();
+    const content = JSON.parse(atob(fileData.content));
+
+    // 計算預估台幣
+    const estimateTWD = jpy > 0 ? Math.round(jpy * tracker.currentRate) : (twd || 0);
+
+    // 新增記錄
+    const newId = Math.max(...content.expenses.map(e => e.id), 0) + 1;
+    content.expenses.push({
+      id: newId,
+      name,
+      date,
+      category,
+      amountJPY: jpy,
+      actualTWD: twd,
+      estimateTWD,
+      isPaid,
+      notes
+    });
+
+    content.metadata.lastUpdated = new Date().toISOString();
+
+    // 推送回 GitHub
+    const putRes = await fetch(API, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/vnd.github+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `新增支出：${name}`,
+        content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+        sha: fileData.sha
+      })
+    });
+
+    if (!putRes.ok) {
+      const err = await putRes.json();
+      throw new Error(err.message || '儲存失敗');
+    }
+
+    // 更新本地資料
+    tracker.data = content;
+    tracker.recalculateEstimates();
+    tracker.render();
+
+    showFormMsg('✅ 已成功新增！', 'success');
+
+    // 清空表單
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-jpy').value = '';
+    document.getElementById('f-twd').value = '';
+    document.getElementById('f-notes').value = '';
+    document.getElementById('f-paid').checked = false;
+
+  } catch (err) {
+    showFormMsg(`❌ ${err.message}`, 'error');
+  } finally {
+    submitBtn.disabled = false;
+    submitBtn.textContent = '儲存';
+  }
+}
