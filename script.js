@@ -345,6 +345,19 @@ function lockApp() {
   location.reload();
 }
 
+function setupToken() {
+  const current = getToken();
+  const val = window.prompt('輸入 GitHub Token（ghp_xxxx）：', current);
+  if (val === null) return;
+  if (val.trim()) {
+    localStorage.setItem('github_token', val.trim());
+    alert('✅ Token 已儲存');
+  } else {
+    localStorage.removeItem('github_token');
+    alert('已清除 Token');
+  }
+}
+
 // ── Modal 控制 ────────────────────────────────────────
 function openForm(id = null) {
   const today = new Date().toISOString().split('T')[0];
@@ -358,9 +371,6 @@ function openForm(id = null) {
   document.getElementById('f-paid').checked = true;
   document.getElementById('f-notes').value = '';
   document.getElementById('form-msg').style.display = 'none';
-
-  const savedToken = localStorage.getItem('github_token');
-  if (savedToken) document.getElementById('f-token').value = savedToken;
 
   if (id) {
     const expense = tracker.expenses.find(e => e.id === id);
@@ -399,12 +409,11 @@ async function saveExpense() {
   const twd = document.getElementById('f-twd').value ? parseFloat(document.getElementById('f-twd').value) : null;
   const isPaid = document.getElementById('f-paid').checked;
   const notes = document.getElementById('f-notes').value.trim();
-  const token = document.getElementById('f-token').value.trim();
+  const token = getToken();
 
   if (!name) return showMsg('❌ 請填寫項目名稱', 'error');
   if (!date) return showMsg('❌ 請填寫日期', 'error');
-  if (!token) return showMsg('❌ 請填寫 GitHub Token', 'error');
-  localStorage.setItem('github_token', token);
+  if (!token) return showMsg('❌ 請先點右上角 🔑 Token 設定 GitHub Token', 'error');
 
   const btn = document.querySelector('.submit-btn');
   btn.disabled = true; btn.textContent = '儲存中...';

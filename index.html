@@ -26,6 +26,7 @@
             <h1>記帳啦啦啦</h1>
             <div class="header-actions">
                 <span class="subtitle">記錄暑期實習期間的支出情況</span>
+                <button class="token-btn" onclick="setupToken()" title="設定 GitHub Token">🔑 Token</button>
                 <button class="lock-btn" onclick="lockApp()" title="鎖定">🔒 鎖定</button>
             </div>
         </header>
@@ -147,11 +148,6 @@
                     <input type="checkbox" id="f-paid" checked />
                     <label for="f-paid">已支出</label>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>GitHub Token <span class="hint">（會記住）</span></label>
-                <input type="password" id="f-token" placeholder="ghp_xxxx 或 gho_xxxx" />
             </div>
 
             <div style="display:flex; gap:10px; margin-top:10px;">
