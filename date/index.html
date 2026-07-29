@@ -128,7 +128,14 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
       <div class="lock-title">有空嗎 🐷</div>
       <div class="lock-sub">登記彼此的空閒時間</div>
 
-      <div id="step-user">
+      <div id="step-pw">
+        <p class="step-label">輸入密碼解鎖</p>
+        <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')doUnlock()">
+        <button class="primary-btn" id="unlock-btn" onclick="doUnlock()">解鎖</button>
+        <div class="err" id="pw-err"></div>
+      </div>
+
+      <div id="step-user" style="display:none">
         <p class="step-label">你是誰？</p>
         <div class="user-btns">
           <div class="user-choice ua" onclick="selectUser('a')">
@@ -140,14 +147,7 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
             <button class="user-btn">蛋餅</button>
           </div>
         </div>
-      </div>
-
-      <div id="step-pw" style="display:none">
-        <p class="step-label">你好，<strong id="greet-name"></strong>！輸入密碼解鎖</p>
-        <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')doUnlock()">
-        <button class="primary-btn" id="unlock-btn" onclick="doUnlock()">解鎖</button>
-        <div class="err" id="pw-err"></div>
-        <button class="back-link" onclick="backToUsers()">← 重新選擇</button>
+        <button class="back-link" onclick="backToPw()">← 重新輸入密碼</button>
       </div>
 
       <div id="step-tz" style="display:none">
@@ -229,7 +229,7 @@ const TZ_OPTS = [
 
 // ── State ──────────────────────────────────────────────
 let st = { user: null, pw: null, data: null, salt: null, sha: null };
-let pendingUser     = null;
+let unlockedState   = null; // holds decrypted data before user is selected
 let hasPendingChanges = false;
 
 // ── Crypto ─────────────────────────────────────────────
@@ -426,22 +426,6 @@ async function saveChanges() {
 }
 
 // ── Lock / Unlock ─────────────────────────────────────────
-function selectUser(u) {
-  pendingUser = u;
-  document.getElementById('step-user').style.display = 'none';
-  document.getElementById('greet-name').textContent  = USERS[u].name;
-  document.getElementById('step-pw').style.display   = '';
-  document.getElementById('pw-input').focus();
-}
-
-function backToUsers() {
-  pendingUser = null;
-  document.getElementById('step-pw').style.display   = 'none';
-  document.getElementById('step-user').style.display = '';
-  document.getElementById('pw-input').value          = '';
-  document.getElementById('pw-err').textContent      = '';
-}
-
 async function doUnlock() {
   const pw    = document.getElementById('pw-input').value;
   const errEl = document.getElementById('pw-err');
@@ -471,20 +455,36 @@ async function doUnlock() {
       }
     }
 
-    st = { user: pendingUser, pw, data, salt, sha };
-    hasPendingChanges = false;
-
-    if (st.data.users[st.user]?.tzOffset == null) {
-      showTzStep();
-    } else {
-      enterApp();
-    }
+    unlockedState = { pw, data, salt, sha };
+    document.getElementById('step-pw').style.display   = 'none';
+    document.getElementById('step-user').style.display = '';
   } catch (e) {
     if (e.message === 'no_token') showTokenModal();
     else errEl.textContent = '連線失敗，請確認網路與 Token';
   } finally {
     btn.textContent = '解鎖';
     btn.disabled    = false;
+  }
+}
+
+function backToPw() {
+  unlockedState = null;
+  document.getElementById('step-user').style.display = 'none';
+  document.getElementById('step-pw').style.display   = '';
+  document.getElementById('pw-input').value          = '';
+  document.getElementById('pw-err').textContent      = '';
+  document.getElementById('pw-input').focus();
+}
+
+function selectUser(u) {
+  st = { ...unlockedState, user: u };
+  unlockedState     = null;
+  hasPendingChanges = false;
+
+  if (st.data.users[u]?.tzOffset == null) {
+    showTzStep();
+  } else {
+    enterApp();
   }
 }
 
@@ -533,13 +533,13 @@ function enterApp() {
 function lockApp() {
   if (hasPendingChanges && !confirm('有未儲存的變更，確定要鎖定嗎？')) return;
   st = { user: null, pw: null, data: null, salt: null, sha: null };
-  pendingUser = null;
+  unlockedState     = null;
   hasPendingChanges = false;
   document.getElementById('app').style.display         = 'none';
   document.getElementById('save-bar').style.display    = 'none';
   document.getElementById('lock-screen').style.display = '';
-  document.getElementById('step-user').style.display   = '';
-  document.getElementById('step-pw').style.display     = 'none';
+  document.getElementById('step-pw').style.display     = '';
+  document.getElementById('step-user').style.display   = 'none';
   document.getElementById('step-tz').style.display     = 'none';
   document.getElementById('pw-input').value            = '';
   document.getElementById('pw-err').textContent        = '';
