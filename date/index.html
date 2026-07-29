@@ -8,7 +8,7 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FFF5F7; color: #333; min-height: 100vh; }
 
-/* Lock */
+/* ── Lock ── */
 .lock-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
 .lock-card { background: white; border-radius: 24px; padding: 40px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 32px rgba(212,96,122,0.12); text-align: center; }
 .lock-title { font-size: 26px; font-weight: 800; color: #D4607A; margin-bottom: 6px; }
@@ -20,22 +20,21 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .user-choice:hover .user-btn { border-color: #D4607A; color: #D4607A; background: #FFF0F3; }
 .user-choice.ua:hover .user-btn { border-color: #4A8FD4; color: #4A8FD4; background: #EBF4FF; }
 .avatar { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 3px solid #eee; transition: all 0.2s; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-.user-btn { width: 100%; padding: 12px 8px; border: 2px solid #eee; border-radius: 14px; background: white; cursor: pointer; font-size: 15px; font-weight: 700; color: #555; transition: all 0.15s; }
+.user-btn { width: 100%; padding: 12px 8px; border: 2px solid #eee; border-radius: 14px; background: white; cursor: pointer; font-size: 15px; font-weight: 700; color: #555; transition: all 0.15s; pointer-events: none; }
 
 input, select { width: 100%; padding: 12px 14px; border: 2px solid #eee; border-radius: 12px; font-size: 15px; font-family: inherit; margin-bottom: 12px; outline: none; transition: border 0.15s; background: white; }
 input:focus, select:focus { border-color: #D4607A; }
 .step-label { font-size: 14px; color: #666; margin-bottom: 14px; }
 
-.primary-btn { width: 100%; padding: 14px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.5px; }
+.primary-btn { width: 100%; padding: 14px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; }
 .primary-btn:hover { opacity: 0.9; }
 .primary-btn:disabled { opacity: 0.5; cursor: default; }
-
 .back-link { background: none; border: none; color: #bbb; font-size: 13px; margin-top: 14px; cursor: pointer; display: inline-block; }
 .back-link:hover { color: #888; }
 .err { color: #E53E3E; font-size: 13px; margin-top: 8px; min-height: 18px; }
 
-/* App header */
-#app { max-width: 500px; margin: 0 auto; padding-bottom: 90px; }
+/* ── App header ── */
+#app { max-width: 500px; margin: 0 auto; padding-bottom: 72px; }
 header { position: sticky; top: 0; background: white; border-bottom: 1px solid #F0DDE2; padding: 10px 14px; display: flex; align-items: center; gap: 8px; z-index: 10; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
 .h-title { font-size: 17px; font-weight: 800; color: #D4607A; flex: 1; }
 .badge { padding: 4px 10px; border-radius: 20px; color: white; font-size: 12px; font-weight: 700; }
@@ -43,33 +42,53 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 .icon-btn { background: none; border: none; font-size: 17px; cursor: pointer; padding: 5px 7px; border-radius: 8px; transition: background 0.15s; }
 .icon-btn:hover { background: #f5f5f5; }
 
-/* Day list */
+/* ── Day list ── */
 #day-list { padding: 10px 10px 0; }
 .day-section { background: white; border-radius: 18px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
-.day-header { padding: 13px 16px; font-weight: 700; font-size: 14px; color: #555; border-bottom: 1px solid #f8f0f2; display: flex; align-items: center; justify-content: space-between; background: #FFFBFC; }
+.day-header { padding: 11px 14px; font-weight: 700; font-size: 14px; color: #555; border-bottom: 1px solid #f8f0f2; display: flex; align-items: center; justify-content: space-between; background: #FFFBFC; }
 .today-tag { background: #D4607A; color: white; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
 
-.slot-card { margin: 8px 10px; padding: 10px 12px; border-radius: 12px; border-left: 4px solid; }
-.slot-row { display: flex; align-items: center; gap: 8px; }
-.slot-who { font-size: 11px; font-weight: 800; flex-shrink: 0; }
-.slot-time { font-size: 14px; font-weight: 600; flex: 1; }
-.del-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 15px; padding: 2px 4px; border-radius: 6px; transition: all 0.15s; flex-shrink: 0; }
-.del-btn:hover { color: #E53E3E; background: #FFF0F0; }
-.slot-other { font-size: 11px; color: #999; margin-top: 3px; }
-.slot-note { font-size: 12px; color: #888; margin-top: 4px; font-style: italic; }
+/* ── Availability grid ── */
+.grid-wrap { padding: 8px 10px 12px; }
+.avail-row { display: flex; align-items: center; margin-bottom: 3px; }
+.row-label { width: 36px; font-size: 11px; font-weight: 800; flex-shrink: 0; line-height: 1.2; }
+.cells { display: flex; flex: 1; border-radius: 5px; overflow: hidden; }
+.cell {
+  flex: 1;
+  min-width: 0;
+  height: 26px;
+  border-right: 1px solid rgba(255,255,255,0.5);
+  transition: filter 0.1s;
+  position: relative;
+}
+.cell:last-child { border-right: none; }
+.cell.busy   { background: #FFCDD2; }
+.cell.free   { background: #A5D6A7; }
+.cell.overlap { background: #CE93D8; }
+.cell.mine   { cursor: pointer; }
+.cell.mine:hover { filter: brightness(0.9); }
+.cell.mine:active { filter: brightness(0.8); }
 
-.overlap-card { margin: 6px 10px; padding: 10px 14px; border-radius: 12px; background: #F2EDFF; border-left: 4px solid #7B61FF; color: #5530B8; font-weight: 700; font-size: 13px; }
+.hlabel-row { display: flex; flex: 1; }
+.hlabel { flex: 1; min-width: 0; font-size: 9px; color: #ccc; padding-left: 1px; user-select: none; }
 
-.day-add-btn { display: block; width: calc(100% - 20px); margin: 8px 10px 12px; padding: 10px; background: #FFF5F7; color: #D4607A; border: 2px dashed #F0B8C5; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 600; transition: background 0.15s; }
-.day-add-btn:hover { background: #FFE8ED; }
+/* ── Legend ── */
+.legend { display: flex; gap: 10px; padding: 0 10px 10px; }
+.legend-item { display: flex; align-items: center; gap: 4px; font-size: 11px; color: #888; }
+.legend-dot { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; }
 
-.empty-day { padding: 10px 16px 4px; color: #ccc; font-size: 13px; }
+/* ── Save bar ── */
+#save-bar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  padding: 12px 20px; background: #2B2B2B; color: white;
+  display: flex; justify-content: space-between; align-items: center;
+  z-index: 30; box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+}
+#save-bar .save-msg { font-size: 13px; color: #ccc; }
+#save-bar .save-btn { padding: 9px 22px; background: #4CAF50; color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; }
+#save-bar .save-btn:disabled { opacity: 0.5; }
 
-/* FAB */
-.fab { position: fixed; bottom: 24px; right: 20px; width: 54px; height: 54px; border-radius: 50%; background: #D4607A; color: white; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(212,96,122,0.45); z-index: 20; transition: transform 0.15s; display: flex; align-items: center; justify-content: center; }
-.fab:hover { transform: scale(1.08); }
-
-/* Modals */
+/* ── Settings Modal ── */
 .modal-bg { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
 .modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
 .modal-sheet { position: relative; background: white; border-radius: 22px 22px 0 0; padding: 24px 20px 36px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
@@ -77,10 +96,10 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 .field-label { display: block; font-size: 12px; font-weight: 700; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
 .modal-actions { display: flex; gap: 10px; margin-top: 6px; }
 .cancel-btn { flex: 1; padding: 13px; background: #f2f2f2; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; font-weight: 600; color: #666; }
-.save-btn { flex: 2; padding: 13px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
-.save-btn:disabled { opacity: 0.5; }
+.ok-btn { flex: 2; padding: 13px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.ok-btn:disabled { opacity: 0.5; }
 
-/* Token overlay */
+/* ── Token overlay ── */
 .token-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); padding: 20px; }
 .token-card { background: white; border-radius: 22px; padding: 32px 24px; width: 100%; max-width: 360px; }
 .token-card p { color: #888; font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
@@ -150,31 +169,21 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
     <button class="icon-btn" onclick="openSettings()" title="設定">⚙️</button>
     <button class="icon-btn" onclick="lockApp()" title="鎖定">🔒</button>
   </header>
+
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#FFCDD2"></div>沒空</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#A5D6A7"></div>有空</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#CE93D8"></div>一起有空 ✨</div>
+    <div class="legend-item" style="margin-left:auto;color:#bbb;font-size:11px">點自己的格子切換</div>
+  </div>
+
   <div id="day-list"></div>
-  <button class="fab" onclick="openAdd(null)" title="新增有空時段">＋</button>
 </div>
 
-<!-- Add Slot Modal -->
-<div id="add-modal" style="display:none">
-  <div class="modal-bg">
-    <div class="modal-overlay" onclick="closeAdd()"></div>
-    <div class="modal-sheet">
-      <div class="modal-title">新增有空時段</div>
-      <label class="field-label">日期</label>
-      <input type="date" id="add-date">
-      <label class="field-label">開始時間（你的時區）</label>
-      <input type="time" id="add-start">
-      <label class="field-label">結束時間（你的時區）</label>
-      <input type="time" id="add-end">
-      <label class="field-label">備註（選填）</label>
-      <input type="text" id="add-notes" placeholder="例：記得帶我去吃東西">
-      <div class="modal-actions">
-        <button class="cancel-btn" onclick="closeAdd()">取消</button>
-        <button class="save-btn" id="add-save-btn" onclick="addSlot()">儲存</button>
-      </div>
-      <div class="err" id="add-err"></div>
-    </div>
-  </div>
+<!-- Save Bar -->
+<div id="save-bar" style="display:none">
+  <span class="save-msg">有未儲存的變更</span>
+  <button class="save-btn" id="save-action-btn" onclick="saveChanges()">儲存</button>
 </div>
 
 <!-- Settings Modal -->
@@ -189,7 +198,7 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
       <input type="password" id="set-token" placeholder="ghp_...">
       <div class="modal-actions">
         <button class="cancel-btn" onclick="closeSettings()">取消</button>
-        <button class="save-btn" id="set-save-btn" onclick="saveSettings()">儲存</button>
+        <button class="ok-btn" id="set-save-btn" onclick="saveSettings()">儲存</button>
       </div>
       <div class="err" id="set-err"></div>
     </div>
@@ -197,49 +206,31 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
 </div>
 
 <script>
-const REPO = 'charliebai605/dailywork';
+const REPO    = 'charliebai605/dailywork';
 const API_URL = `https://api.github.com/repos/${REPO}/contents/date/schedule.json`;
 
 const USERS = {
-  a: { name: '瓜ㄍㄧ', color: '#4A8FD4', light: '#EBF4FF' },
-  b: { name: '蛋餅',   color: '#D4607A', light: '#FFF0F3' }
+  a: { name: '瓜ㄍㄧ', color: '#4A8FD4' },
+  b: { name: '蛋餅',   color: '#D4607A' }
 };
 
 const TZ_OPTS = [
-  { v: -720, l: 'UTC-12' },
-  { v: -660, l: 'UTC-11' },
-  { v: -600, l: 'UTC-10（夏威夷）' },
-  { v: -540, l: 'UTC-9' },
-  { v: -480, l: 'UTC-8（洛杉磯）' },
-  { v: -420, l: 'UTC-7（丹佛）' },
-  { v: -360, l: 'UTC-6（芝加哥）' },
-  { v: -300, l: 'UTC-5（紐約）' },
-  { v: -240, l: 'UTC-4' },
-  { v: -180, l: 'UTC-3（聖保羅）' },
-  { v: -120, l: 'UTC-2' },
-  { v:  -60, l: 'UTC-1' },
-  { v:    0, l: 'UTC+0（倫敦）' },
-  { v:   60, l: 'UTC+1（巴黎）' },
-  { v:  120, l: 'UTC+2（開羅）' },
-  { v:  180, l: 'UTC+3（莫斯科）' },
-  { v:  240, l: 'UTC+4（杜拜）' },
-  { v:  300, l: 'UTC+5' },
-  { v:  330, l: 'UTC+5:30（孟買）' },
-  { v:  360, l: 'UTC+6（達卡）' },
-  { v:  420, l: 'UTC+7（曼谷）' },
-  { v:  480, l: 'UTC+8（台北）' },
-  { v:  540, l: 'UTC+9（東京）' },
-  { v:  570, l: 'UTC+9:30（阿德萊德）' },
-  { v:  600, l: 'UTC+10（雪梨）' },
-  { v:  660, l: 'UTC+11' },
-  { v:  720, l: 'UTC+12（奧克蘭）' },
-  { v:  780, l: 'UTC+13' },
-  { v:  840, l: 'UTC+14' }
+  { v: -720, l: 'UTC-12' }, { v: -660, l: 'UTC-11' }, { v: -600, l: 'UTC-10（夏威夷）' },
+  { v: -540, l: 'UTC-9' },  { v: -480, l: 'UTC-8（洛杉磯）' }, { v: -420, l: 'UTC-7（丹佛）' },
+  { v: -360, l: 'UTC-6（芝加哥）' }, { v: -300, l: 'UTC-5（紐約）' }, { v: -240, l: 'UTC-4' },
+  { v: -180, l: 'UTC-3（聖保羅）' }, { v: -120, l: 'UTC-2' }, { v: -60, l: 'UTC-1' },
+  { v:    0, l: 'UTC+0（倫敦）' },   { v:   60, l: 'UTC+1（巴黎）' },  { v:  120, l: 'UTC+2（開羅）' },
+  { v:  180, l: 'UTC+3（莫斯科）' }, { v:  240, l: 'UTC+4（杜拜）' },  { v:  300, l: 'UTC+5' },
+  { v:  330, l: 'UTC+5:30（孟買）' },{ v:  360, l: 'UTC+6（達卡）' },  { v:  420, l: 'UTC+7（曼谷）' },
+  { v:  480, l: 'UTC+8（台北）' },   { v:  540, l: 'UTC+9（東京）' },  { v:  570, l: 'UTC+9:30（阿德萊德）' },
+  { v:  600, l: 'UTC+10（雪梨）' },  { v:  660, l: 'UTC+11' },         { v:  720, l: 'UTC+12（奧克蘭）' },
+  { v:  780, l: 'UTC+13' },          { v:  840, l: 'UTC+14' }
 ];
 
 // ── State ──────────────────────────────────────────────
 let st = { user: null, pw: null, data: null, salt: null, sha: null };
-let pendingUser = null;
+let pendingUser     = null;
+let hasPendingChanges = false;
 
 // ── Crypto ─────────────────────────────────────────────
 async function deriveKey(pw, salt) {
@@ -252,21 +243,21 @@ async function deriveKey(pw, salt) {
 const b64e = b => btoa(String.fromCharCode(...new Uint8Array(b)));
 const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-async function enc(obj, pw, existingSalt) {
+async function encData(obj, pw, existingSalt) {
   const salt = existingSalt ? b64d(existingSalt) : crypto.getRandomValues(new Uint8Array(16));
-  const iv = crypto.getRandomValues(new Uint8Array(12));
-  const key = await deriveKey(pw, salt);
+  const iv   = crypto.getRandomValues(new Uint8Array(12));
+  const key  = await deriveKey(pw, salt);
   const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
   return { v: 1, salt: b64e(salt), iv: b64e(iv), data: b64e(data) };
 }
 
-async function dec(shell, pw) {
+async function decData(shell, pw) {
   const key = await deriveKey(pw, b64d(shell.salt));
   const raw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(shell.iv) }, key, b64d(shell.data));
   return JSON.parse(new TextDecoder().decode(raw));
 }
 
-// ── GitHub API ──────────────────────────────────────────
+// ── GitHub ──────────────────────────────────────────────
 const getToken = () => localStorage.getItem('github_token') || '';
 
 async function ghGet() {
@@ -276,17 +267,13 @@ async function ghGet() {
   if (r.status === 404) return null;
   if (!r.ok) throw new Error('fetch_failed');
   const j = await r.json();
-  const content = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, '')))));
-  return { content, sha: j.sha };
+  return { content: JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))), sha: j.sha };
 }
 
 async function ghPut(encrypted, sha) {
   const token = getToken();
   if (!token) throw new Error('no_token');
-  const body = {
-    message: 'update: schedule',
-    content: btoa(unescape(encodeURIComponent(JSON.stringify(encrypted, null, 2))))
-  };
+  const body = { message: 'update: schedule', content: btoa(unescape(encodeURIComponent(JSON.stringify(encrypted, null, 2)))) };
   if (sha) body.sha = sha;
   const r = await fetch(API_URL, {
     method: 'PUT',
@@ -298,68 +285,54 @@ async function ghPut(encrypted, sha) {
 }
 
 // ── Time helpers ────────────────────────────────────────
-function localToUTC(dateStr, timeStr, tzOff) {
-  const [y, mo, d] = dateStr.split('-').map(Number);
-  const [h, mi] = timeStr.split(':').map(Number);
-  return new Date(Date.UTC(y, mo - 1, d, h, mi) - tzOff * 60000).toISOString();
-}
-
 function utcParts(iso, tzOff) {
   const d = new Date(new Date(iso).getTime() + tzOff * 60000);
   return {
     date: `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`,
-    time: `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`
+    hour: d.getUTCHours()
   };
-}
-
-function fmtTime(iso, tzOff) {
-  const { time } = utcParts(iso, tzOff);
-  const [h, m] = time.split(':').map(Number);
-  return `${h >= 12 ? '下午' : '上午'} ${h % 12 || 12}:${String(m).padStart(2,'0')}`;
 }
 
 function fmtDate(ds) {
   const [y, mo, d] = ds.split('-').map(Number);
-  const dow = ['日','一','二','三','四','五','六'][new Date(y, mo - 1, d).getDay()];
+  const dow = ['日','一','二','三','四','五','六'][new Date(y, mo-1, d).getDay()];
   return `${mo}月${d}日（週${dow}）`;
 }
 
 function todayStr(tzOff) { return utcParts(new Date().toISOString(), tzOff).date; }
 
-// ── Slot helpers ────────────────────────────────────────
+// ── Data helpers ────────────────────────────────────────
 const myTz    = () => st.data?.users?.[st.user]?.tzOffset ?? null;
 const other   = () => st.user === 'a' ? 'b' : 'a';
-const otherTz = () => st.data?.users?.[other()]?.tzOffset ?? null;
 
 function normalize(data) {
-  if (!data.users) data.users = {};
+  if (!data.users)   data.users   = {};
   if (!data.users.a) data.users.a = { tzOffset: null };
   if (!data.users.b) data.users.b = { tzOffset: null };
-  if (!data.slots)  data.slots  = [];
+  if (!data.avail)   data.avail   = {};
+  if (!data.avail.a) data.avail.a = {};
+  if (!data.avail.b) data.avail.b = {};
   return data;
 }
 
-function overlaps(slA, slB) {
-  const res = [];
-  for (const a of slA) for (const b of slB) {
-    const s = Math.max(+new Date(a.startUTC), +new Date(b.startUTC));
-    const e = Math.min(+new Date(a.endUTC),   +new Date(b.endUTC));
-    if (s < e) res.push({ startUTC: new Date(s).toISOString(), endUTC: new Date(e).toISOString() });
-  }
-  return res;
-}
+// Is userId available at viewerHour on viewerDate (in viewer's timezone)?
+function isAvail(userId, viewerDateStr, viewerHour) {
+  const vTz = myTz();
+  const uTz = st.data?.users?.[userId]?.tzOffset;
+  if (vTz === null || uTz == null) return false;
 
-function tzLabel(v) { return TZ_OPTS.find(t => t.v === v)?.l ?? `UTC${v >= 0 ? '+' : ''}${v/60}`; }
+  const [y, mo, d] = viewerDateStr.split('-').map(Number);
+  const utcMs      = Date.UTC(y, mo-1, d, viewerHour, 0) - vTz * 60000;
+  const { date: uDate, hour: uHour } = utcParts(new Date(utcMs).toISOString(), uTz);
+
+  return (st.data.avail?.[userId]?.[uDate] ?? []).includes(uHour);
+}
 
 // ── Render ──────────────────────────────────────────────
 function renderDayList() {
   const tz = myTz();
   if (tz === null) return;
   const today = todayStr(tz);
-  const allSlots = st.data?.slots ?? [];
-  const mySlots    = allSlots.filter(s => s.user === st.user);
-  const theirSlots = allSlots.filter(s => s.user === other());
-  const oTz = otherTz();
 
   const dates = [];
   for (let i = 0; i < 14; i++) {
@@ -367,90 +340,117 @@ function renderDayList() {
     if (!dates.includes(date)) dates.push(date);
   }
 
-  function slotHTML(slots, isOwn) {
-    return slots
-      .filter(s => utcParts(s.startUTC, tz).date === currentDate)
-      .map(s => {
-        const u = USERS[s.user];
-        const t1 = fmtTime(s.startUTC, tz);
-        const t2 = fmtTime(s.endUTC, tz);
-        let otherLine = '';
-        if (isOwn && oTz !== null && oTz !== tz) {
-          otherLine = `<div class="slot-other">${USERS[other()].name}看到：${fmtTime(s.startUTC, oTz)} – ${fmtTime(s.endUTC, oTz)}</div>`;
-        } else if (!isOwn) {
-          const ownerTzVal = st.data.users[s.user]?.tzOffset;
-          if (ownerTzVal != null && ownerTzVal !== tz) {
-            otherLine = `<div class="slot-other">${u.name}的時區：${fmtTime(s.startUTC, ownerTzVal)} – ${fmtTime(s.endUTC, ownerTzVal)}</div>`;
-          }
-        }
-        const del = isOwn ? `<button class="del-btn" onclick="deleteSlot('${s.id}')">✕</button>` : '';
-        const note = s.notes ? `<div class="slot-note">"${s.notes}"</div>` : '';
-        return `<div class="slot-card" style="border-left-color:${u.color};background:${u.light}">
-          <div class="slot-row">
-            <span class="slot-who" style="color:${u.color}">${u.name}</span>
-            <span class="slot-time">${t1} – ${t2}</span>
-            ${del}
-          </div>
-          ${otherLine}${note}
-        </div>`;
+  // Hour label row: show 0, 6, 12, 18, others empty
+  const labelCells = Array.from({ length: 24 }, (_, h) =>
+    `<div class="hlabel">${h % 6 === 0 ? h : ''}</div>`
+  ).join('');
+
+  const html = dates.map(ds => {
+    const rows = ['a', 'b'].map(uid => {
+      const u    = USERS[uid];
+      const isMe = uid === st.user;
+
+      const cells = Array.from({ length: 24 }, (_, h) => {
+        const fA = isAvail('a', ds, h);
+        const fB = isAvail('b', ds, h);
+        const thisUserFree = uid === 'a' ? fA : fB;
+        const overlap = fA && fB;
+
+        let cls = 'cell';
+        if (overlap)         cls += ' overlap';
+        else if (thisUserFree) cls += ' free';
+        else                   cls += ' busy';
+        if (isMe)              cls += ' mine';
+
+        const tap = isMe ? `onclick="toggleHour('${ds}',${h})"` : '';
+        return `<div class="${cls}" ${tap}></div>`;
       }).join('');
-  }
 
-  let html = '';
-  for (const date of dates) {
-    currentDate = date; // used inside slotHTML closure
-    const dayMine   = mySlots.filter(s    => utcParts(s.startUTC, tz).date === date);
-    const dayTheirs = theirSlots.filter(s => utcParts(s.startUTC, tz).date === date);
-    const ols = overlaps(dayMine, dayTheirs);
+      return `<div class="avail-row">
+        <span class="row-label" style="color:${u.color}">${u.name}</span>
+        <div class="cells">${cells}</div>
+      </div>`;
+    }).join('');
 
-    const mineHTML   = slotHTML(mySlots,    true);
-    const theirHTML  = slotHTML(theirSlots, false);
-    const overlapHTML = ols.map(o =>
-      `<div class="overlap-card">✨ 一起有空：${fmtTime(o.startUTC, tz)} – ${fmtTime(o.endUTC, tz)}</div>`
-    ).join('');
-
-    const isEmpty = !dayMine.length && !dayTheirs.length;
-
-    html += `<div class="day-section">
+    return `<div class="day-section">
       <div class="day-header">
-        <span>${fmtDate(date)}</span>
-        ${date === today ? '<span class="today-tag">今天</span>' : ''}
+        <span>${fmtDate(ds)}</span>
+        ${ds === today ? '<span class="today-tag">今天</span>' : ''}
       </div>
-      ${isEmpty ? '<div class="empty-day">還沒有人有空 😴</div>' : ''}
-      ${mineHTML}${theirHTML}${overlapHTML}
-      <button class="day-add-btn" onclick="openAdd('${date}')">＋ 加入有空時段</button>
+      <div class="grid-wrap">
+        <div class="avail-row">
+          <span class="row-label"></span>
+          <div class="hlabel-row">${labelCells}</div>
+        </div>
+        ${rows}
+      </div>
     </div>`;
-  }
+  }).join('');
+
   document.getElementById('day-list').innerHTML = html;
 }
-let currentDate = '';
 
-// ── Lock / Unlock ────────────────────────────────────────
+// ── Toggle hour ──────────────────────────────────────────
+function toggleHour(dateStr, hour) {
+  if (!st.data.avail)         st.data.avail         = {};
+  if (!st.data.avail[st.user]) st.data.avail[st.user] = {};
+  if (!st.data.avail[st.user][dateStr]) st.data.avail[st.user][dateStr] = [];
+
+  const arr = st.data.avail[st.user][dateStr];
+  const idx = arr.indexOf(hour);
+  if (idx === -1) arr.push(hour);
+  else arr.splice(idx, 1);
+
+  hasPendingChanges = true;
+  document.getElementById('save-bar').style.display = '';
+  renderDayList();
+}
+
+// ── Save changes ─────────────────────────────────────────
+async function saveChanges() {
+  const btn = document.getElementById('save-action-btn');
+  btn.textContent = '儲存中…';
+  btn.disabled    = true;
+  try {
+    const encrypted = await encData(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(encrypted, st.sha);
+    st.salt = encrypted.salt;
+    hasPendingChanges = false;
+    document.getElementById('save-bar').style.display = 'none';
+  } catch {
+    alert('儲存失敗，請重試（可能需要先點 🔄 重新整理）');
+  } finally {
+    btn.textContent = '儲存';
+    btn.disabled    = false;
+  }
+}
+
+// ── Lock / Unlock ─────────────────────────────────────────
 function selectUser(u) {
   pendingUser = u;
   document.getElementById('step-user').style.display = 'none';
-  document.getElementById('greet-name').textContent = USERS[u].name;
-  document.getElementById('step-pw').style.display = '';
+  document.getElementById('greet-name').textContent  = USERS[u].name;
+  document.getElementById('step-pw').style.display   = '';
   document.getElementById('pw-input').focus();
 }
 
 function backToUsers() {
   pendingUser = null;
-  document.getElementById('step-pw').style.display = 'none';
+  document.getElementById('step-pw').style.display   = 'none';
   document.getElementById('step-user').style.display = '';
-  document.getElementById('pw-input').value = '';
-  document.getElementById('pw-err').textContent = '';
+  document.getElementById('pw-input').value          = '';
+  document.getElementById('pw-err').textContent      = '';
 }
 
 async function doUnlock() {
-  const pw = document.getElementById('pw-input').value;
+  const pw    = document.getElementById('pw-input').value;
   const errEl = document.getElementById('pw-err');
   errEl.textContent = '';
   if (!pw) { errEl.textContent = '請輸入密碼'; return; }
 
   const btn = document.getElementById('unlock-btn');
   btn.textContent = '驗證中…';
-  btn.disabled = true;
+  btn.disabled    = true;
 
   try {
     if (!getToken()) { showTokenModal(); return; }
@@ -459,10 +459,10 @@ async function doUnlock() {
     let data, salt = null, sha = null;
 
     if (!file) {
-      data = normalize({ users: { a: { tzOffset: null }, b: { tzOffset: null } }, slots: [] });
+      data = normalize({ users: { a: { tzOffset: null }, b: { tzOffset: null } }, avail: { a: {}, b: {} } });
     } else {
       try {
-        data = normalize(await dec(file.content, pw));
+        data = normalize(await decData(file.content, pw));
         salt = file.content.salt;
         sha  = file.sha;
       } catch {
@@ -472,6 +472,7 @@ async function doUnlock() {
     }
 
     st = { user: pendingUser, pw, data, salt, sha };
+    hasPendingChanges = false;
 
     if (st.data.users[st.user]?.tzOffset == null) {
       showTzStep();
@@ -483,7 +484,7 @@ async function doUnlock() {
     else errEl.textContent = '連線失敗，請確認網路與 Token';
   } finally {
     btn.textContent = '解鎖';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
@@ -496,13 +497,13 @@ function showTzStep() {
 }
 
 async function saveTz() {
-  const tz = parseInt(document.getElementById('tz-sel').value);
+  const tz  = parseInt(document.getElementById('tz-sel').value);
   st.data.users[st.user].tzOffset = tz;
   const btn = document.getElementById('tz-btn');
   btn.textContent = '儲存中…';
-  btn.disabled = true;
+  btn.disabled    = true;
   try {
-    const encrypted = await enc(st.data, st.pw, st.salt);
+    const encrypted = await encData(st.data, st.pw, st.salt);
     st.sha  = await ghPut(encrypted, st.sha);
     st.salt = encrypted.salt;
     enterApp();
@@ -511,129 +512,68 @@ async function saveTz() {
     st.data.users[st.user].tzOffset = null;
   } finally {
     btn.textContent = '確認';
-    btn.disabled = false;
+    btn.disabled    = false;
   }
 }
 
 function enterApp() {
   document.getElementById('lock-screen').style.display = 'none';
-  document.getElementById('app').style.display = '';
-  const u = USERS[st.user];
+  document.getElementById('app').style.display         = '';
+  document.getElementById('save-bar').style.display    = 'none';
+  hasPendingChanges = false;
+
+  const u  = USERS[st.user];
   const tz = myTz();
-  document.getElementById('user-badge').textContent = u.name;
+  document.getElementById('user-badge').textContent   = u.name;
   document.getElementById('user-badge').style.background = u.color;
-  document.getElementById('tz-badge').textContent = tzLabel(tz);
+  document.getElementById('tz-badge').textContent     = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
   renderDayList();
 }
 
 function lockApp() {
+  if (hasPendingChanges && !confirm('有未儲存的變更，確定要鎖定嗎？')) return;
   st = { user: null, pw: null, data: null, salt: null, sha: null };
   pendingUser = null;
-  document.getElementById('app').style.display = 'none';
+  hasPendingChanges = false;
+  document.getElementById('app').style.display         = 'none';
+  document.getElementById('save-bar').style.display    = 'none';
   document.getElementById('lock-screen').style.display = '';
-  document.getElementById('step-user').style.display = '';
-  document.getElementById('step-pw').style.display = 'none';
-  document.getElementById('step-tz').style.display = 'none';
-  document.getElementById('pw-input').value = '';
-  document.getElementById('pw-err').textContent = '';
+  document.getElementById('step-user').style.display   = '';
+  document.getElementById('step-pw').style.display     = 'none';
+  document.getElementById('step-tz').style.display     = 'none';
+  document.getElementById('pw-input').value            = '';
+  document.getElementById('pw-err').textContent        = '';
 }
 
-// ── Refresh ─────────────────────────────────────────────
+// ── Refresh ───────────────────────────────────────────────
 async function refreshData() {
+  if (hasPendingChanges && !confirm('有未儲存的變更，重新整理會遺失，確定嗎？')) return;
   const btn = document.getElementById('refresh-btn');
   btn.textContent = '⏳';
-  btn.disabled = true;
+  btn.disabled    = true;
   try {
     const file = await ghGet();
     if (file) {
-      const data = normalize(await dec(file.content, st.pw));
-      st.data = data;
+      st.data = normalize(await decData(file.content, st.pw));
       st.salt = file.content.salt;
       st.sha  = file.sha;
+      hasPendingChanges = false;
+      document.getElementById('save-bar').style.display = 'none';
       renderDayList();
     }
   } catch { alert('重新整理失敗'); }
   finally { btn.textContent = '🔄'; btn.disabled = false; }
 }
 
-// ── Add Slot ─────────────────────────────────────────────
-function openAdd(dateStr) {
-  document.getElementById('add-date').value  = dateStr || '';
-  document.getElementById('add-start').value = '';
-  document.getElementById('add-end').value   = '';
-  document.getElementById('add-notes').value = '';
-  document.getElementById('add-err').textContent = '';
-  document.getElementById('add-modal').style.display = '';
-}
-
-function closeAdd() { document.getElementById('add-modal').style.display = 'none'; }
-
-async function addSlot() {
-  const date  = document.getElementById('add-date').value;
-  const start = document.getElementById('add-start').value;
-  const end   = document.getElementById('add-end').value;
-  const notes = document.getElementById('add-notes').value.trim();
-  const errEl = document.getElementById('add-err');
-  errEl.textContent = '';
-  if (!date || !start || !end) { errEl.textContent = '請填入日期和時間'; return; }
-  if (start >= end) { errEl.textContent = '結束時間必須晚於開始時間'; return; }
-
-  const tz = myTz();
-  const slot = {
-    id:       Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    user:     st.user,
-    startUTC: localToUTC(date, start, tz),
-    endUTC:   localToUTC(date, end,   tz),
-    notes
-  };
-
-  st.data.slots.push(slot);
-  const btn = document.getElementById('add-save-btn');
-  btn.textContent = '儲存中…';
-  btn.disabled = true;
-  try {
-    const encrypted = await enc(st.data, st.pw, st.salt);
-    st.sha  = await ghPut(encrypted, st.sha);
-    st.salt = encrypted.salt;
-    closeAdd();
-    renderDayList();
-  } catch {
-    errEl.textContent = '儲存失敗，請重試';
-    st.data.slots.pop();
-  } finally {
-    btn.textContent = '儲存';
-    btn.disabled = false;
-  }
-}
-
-// ── Delete Slot ──────────────────────────────────────────
-async function deleteSlot(id) {
-  if (!confirm('確定要刪除這個時段？')) return;
-  const idx = st.data.slots.findIndex(s => s.id === id);
-  if (idx === -1) return;
-  const [removed] = st.data.slots.splice(idx, 1);
-  try {
-    const encrypted = await enc(st.data, st.pw, st.salt);
-    st.sha  = await ghPut(encrypted, st.sha);
-    st.salt = encrypted.salt;
-    renderDayList();
-  } catch {
-    st.data.slots.splice(idx, 0, removed);
-    alert('刪除失敗，請重試');
-    renderDayList();
-  }
-}
-
-// ── Settings ─────────────────────────────────────────────
+// ── Settings ──────────────────────────────────────────────
 function openSettings() {
   const tz = myTz();
   document.getElementById('set-tz').innerHTML =
     TZ_OPTS.map(t => `<option value="${t.v}"${t.v === tz ? ' selected' : ''}>${t.l}</option>`).join('');
-  document.getElementById('set-token').value = getToken();
+  document.getElementById('set-token').value    = getToken();
   document.getElementById('set-err').textContent = '';
   document.getElementById('settings-modal').style.display = '';
 }
-
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
 
 async function saveSettings() {
@@ -643,39 +583,35 @@ async function saveSettings() {
   errEl.textContent = '';
 
   if (newToken) localStorage.setItem('github_token', newToken);
-  else localStorage.removeItem('github_token');
+  else          localStorage.removeItem('github_token');
 
   const oldTz = myTz();
   if (newTz !== oldTz) {
-    st.data.users[st.user].tzOffset = newTz;
     const btn = document.getElementById('set-save-btn');
-    btn.textContent = '儲存中…';
-    btn.disabled = true;
+    btn.textContent = '儲存中…'; btn.disabled = true;
+    st.data.users[st.user].tzOffset = newTz;
     try {
-      const encrypted = await enc(st.data, st.pw, st.salt);
+      const encrypted = await encData(st.data, st.pw, st.salt);
       st.sha  = await ghPut(encrypted, st.sha);
       st.salt = encrypted.salt;
     } catch {
       errEl.textContent = '儲存失敗';
       st.data.users[st.user].tzOffset = oldTz;
-      btn.textContent = '儲存';
-      btn.disabled = false;
+      btn.textContent = '儲存'; btn.disabled = false;
       return;
     }
-    btn.textContent = '儲存';
-    btn.disabled = false;
+    btn.textContent = '儲存'; btn.disabled = false;
   }
 
   closeSettings();
   enterApp();
 }
 
-// ── Token Modal ──────────────────────────────────────────
+// ── Token Modal ───────────────────────────────────────────
 function showTokenModal() {
   document.getElementById('token-input').value = getToken();
   document.getElementById('token-modal').style.display = '';
 }
-
 function saveTokenAndContinue() {
   const token = document.getElementById('token-input').value.trim();
   if (!token) { alert('請輸入 GitHub Token'); return; }
