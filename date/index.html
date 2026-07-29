@@ -65,9 +65,9 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 .cell.busy   { background: #FFCDD2; }
 .cell.free   { background: #A5D6A7; }
 .cell.overlap { background: #CE93D8; }
-.cell.mine   { cursor: pointer; }
-.cell.mine:hover { filter: brightness(0.9); }
-.cell.mine:active { filter: brightness(0.8); }
+.cell.mine   { cursor: pointer; touch-action: none; user-select: none; }
+.cell.mine:hover { filter: brightness(0.92); }
+.cell.mine:active { filter: brightness(0.82); }
 
 .hlabel-row { display: flex; flex: 1; }
 .hlabel { flex: 1; min-width: 0; font-size: 9px; color: #ccc; padding-left: 1px; user-select: none; }
@@ -357,13 +357,13 @@ function renderDayList() {
         const overlap = fA && fB;
 
         let cls = 'cell';
-        if (overlap)         cls += ' overlap';
+        if (overlap)           cls += ' overlap';
         else if (thisUserFree) cls += ' free';
         else                   cls += ' busy';
         if (isMe)              cls += ' mine';
 
-        const tap = isMe ? `onclick="toggleHour('${ds}',${h})"` : '';
-        return `<div class="${cls}" ${tap}></div>`;
+        const attrs = `data-date="${ds}" data-hour="${h}" data-user="${uid}"${isMe ? ' data-mine="1"' : ''}`;
+        return `<div class="${cls}" ${attrs}></div>`;
       }).join('');
 
       return `<div class="avail-row">
@@ -390,20 +390,73 @@ function renderDayList() {
   document.getElementById('day-list').innerHTML = html;
 }
 
-// ── Toggle hour ──────────────────────────────────────────
-function toggleHour(dateStr, hour) {
-  if (!st.data.avail)         st.data.avail         = {};
-  if (!st.data.avail[st.user]) st.data.avail[st.user] = {};
+// ── Drag-to-select ───────────────────────────────────────
+let dragState = null;
+let dragListenersAdded = false;
+
+function initDragListeners() {
+  if (dragListenersAdded) return;
+  dragListenersAdded = true;
+  const dl = document.getElementById('day-list');
+
+  dl.addEventListener('pointerdown', e => {
+    const cell = e.target.closest('[data-mine]');
+    if (!cell) return;
+    e.preventDefault();
+    const dateStr = cell.dataset.date;
+    const hour    = parseInt(cell.dataset.hour);
+    dragState = { painting: !isAvail(st.user, dateStr, hour), dateStr };
+    applyDrag(dateStr, hour);
+    dl.setPointerCapture(e.pointerId);
+  });
+
+  dl.addEventListener('pointermove', e => {
+    if (!dragState) return;
+    e.preventDefault();
+    const el   = document.elementFromPoint(e.clientX, e.clientY);
+    const cell = el?.closest?.('[data-mine]');
+    if (!cell || cell.dataset.date !== dragState.dateStr) return;
+    applyDrag(dragState.dateStr, parseInt(cell.dataset.hour));
+  });
+
+  const endDrag = () => { dragState = null; };
+  dl.addEventListener('pointerup',     endDrag);
+  dl.addEventListener('pointercancel', endDrag);
+}
+
+function applyDrag(dateStr, hour) {
+  if (!dragState) return;
+  if (!st.data.avail[st.user])          st.data.avail[st.user]          = {};
   if (!st.data.avail[st.user][dateStr]) st.data.avail[st.user][dateStr] = [];
 
-  const arr = st.data.avail[st.user][dateStr];
-  const idx = arr.indexOf(hour);
-  if (idx === -1) arr.push(hour);
+  const arr    = st.data.avail[st.user][dateStr];
+  const idx    = arr.indexOf(hour);
+  const isFree = idx !== -1;
+  if (dragState.painting === isFree) return; // already in target state, skip
+
+  if (dragState.painting) arr.push(hour);
   else arr.splice(idx, 1);
 
   hasPendingChanges = true;
   document.getElementById('save-bar').style.display = '';
-  renderDayList();
+  updateCell(dateStr, hour);
+}
+
+function updateCell(dateStr, hour) {
+  const fA = isAvail('a', dateStr, hour);
+  const fB = isAvail('b', dateStr, hour);
+  const overlap = fA && fB;
+  for (const uid of ['a', 'b']) {
+    const cell = document.querySelector(
+      `[data-date="${dateStr}"][data-hour="${hour}"][data-user="${uid}"]`
+    );
+    if (!cell) continue;
+    const thisFree = uid === 'a' ? fA : fB;
+    ['busy', 'free', 'overlap'].forEach(c => cell.classList.remove(c));
+    if (overlap)       cell.classList.add('overlap');
+    else if (thisFree) cell.classList.add('free');
+    else               cell.classList.add('busy');
+  }
 }
 
 // ── Save changes ─────────────────────────────────────────
@@ -524,9 +577,10 @@ function enterApp() {
 
   const u  = USERS[st.user];
   const tz = myTz();
-  document.getElementById('user-badge').textContent   = u.name;
+  document.getElementById('user-badge').textContent      = u.name;
   document.getElementById('user-badge').style.background = u.color;
-  document.getElementById('tz-badge').textContent     = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
+  document.getElementById('tz-badge').textContent        = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
+  initDragListeners();
   renderDayList();
 }
 
