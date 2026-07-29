@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>有空嗎 💕</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #FFF5F7; color: #333; min-height: 100vh; }
+
+/* Lock */
+.lock-wrap { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+.lock-card { background: white; border-radius: 24px; padding: 40px 28px; width: 100%; max-width: 360px; box-shadow: 0 4px 32px rgba(212,96,122,0.12); text-align: center; }
+.lock-title { font-size: 26px; font-weight: 800; color: #D4607A; margin-bottom: 6px; }
+.lock-sub { color: #aaa; font-size: 14px; margin-bottom: 28px; }
+
+.user-btns { display: flex; gap: 12px; margin: 4px 0 20px; }
+.user-btn { flex: 1; padding: 16px 8px; border: 2px solid #eee; border-radius: 14px; background: white; cursor: pointer; font-size: 15px; font-weight: 700; color: #555; transition: all 0.15s; }
+.user-btn:hover, .user-btn.active { border-color: #D4607A; color: #D4607A; background: #FFF0F3; }
+.user-btn.ua:hover, .user-btn.ua.active { border-color: #4A8FD4; color: #4A8FD4; background: #EBF4FF; }
+
+input, select { width: 100%; padding: 12px 14px; border: 2px solid #eee; border-radius: 12px; font-size: 15px; font-family: inherit; margin-bottom: 12px; outline: none; transition: border 0.15s; background: white; }
+input:focus, select:focus { border-color: #D4607A; }
+.step-label { font-size: 14px; color: #666; margin-bottom: 14px; }
+
+.primary-btn { width: 100%; padding: 14px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.5px; }
+.primary-btn:hover { opacity: 0.9; }
+.primary-btn:disabled { opacity: 0.5; cursor: default; }
+
+.back-link { background: none; border: none; color: #bbb; font-size: 13px; margin-top: 14px; cursor: pointer; display: inline-block; }
+.back-link:hover { color: #888; }
+.err { color: #E53E3E; font-size: 13px; margin-top: 8px; min-height: 18px; }
+
+/* App header */
+#app { max-width: 500px; margin: 0 auto; padding-bottom: 90px; }
+header { position: sticky; top: 0; background: white; border-bottom: 1px solid #F0DDE2; padding: 10px 14px; display: flex; align-items: center; gap: 8px; z-index: 10; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
+.h-title { font-size: 17px; font-weight: 800; color: #D4607A; flex: 1; }
+.badge { padding: 4px 10px; border-radius: 20px; color: white; font-size: 12px; font-weight: 700; }
+.tz-badge { padding: 4px 8px; border-radius: 20px; background: #F0EBFF; color: #6C3FC9; font-size: 11px; font-weight: 600; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.icon-btn { background: none; border: none; font-size: 17px; cursor: pointer; padding: 5px 7px; border-radius: 8px; transition: background 0.15s; }
+.icon-btn:hover { background: #f5f5f5; }
+
+/* Day list */
+#day-list { padding: 10px 10px 0; }
+.day-section { background: white; border-radius: 18px; margin-bottom: 10px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+.day-header { padding: 13px 16px; font-weight: 700; font-size: 14px; color: #555; border-bottom: 1px solid #f8f0f2; display: flex; align-items: center; justify-content: space-between; background: #FFFBFC; }
+.today-tag { background: #D4607A; color: white; font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+
+.slot-card { margin: 8px 10px; padding: 10px 12px; border-radius: 12px; border-left: 4px solid; }
+.slot-row { display: flex; align-items: center; gap: 8px; }
+.slot-who { font-size: 11px; font-weight: 800; flex-shrink: 0; }
+.slot-time { font-size: 14px; font-weight: 600; flex: 1; }
+.del-btn { background: none; border: none; color: #ddd; cursor: pointer; font-size: 15px; padding: 2px 4px; border-radius: 6px; transition: all 0.15s; flex-shrink: 0; }
+.del-btn:hover { color: #E53E3E; background: #FFF0F0; }
+.slot-other { font-size: 11px; color: #999; margin-top: 3px; }
+.slot-note { font-size: 12px; color: #888; margin-top: 4px; font-style: italic; }
+
+.overlap-card { margin: 6px 10px; padding: 10px 14px; border-radius: 12px; background: #F2EDFF; border-left: 4px solid #7B61FF; color: #5530B8; font-weight: 700; font-size: 13px; }
+
+.day-add-btn { display: block; width: calc(100% - 20px); margin: 8px 10px 12px; padding: 10px; background: #FFF5F7; color: #D4607A; border: 2px dashed #F0B8C5; border-radius: 12px; cursor: pointer; font-size: 13px; font-weight: 600; transition: background 0.15s; }
+.day-add-btn:hover { background: #FFE8ED; }
+
+.empty-day { padding: 10px 16px 4px; color: #ccc; font-size: 13px; }
+
+/* FAB */
+.fab { position: fixed; bottom: 24px; right: 20px; width: 54px; height: 54px; border-radius: 50%; background: #D4607A; color: white; border: none; font-size: 26px; cursor: pointer; box-shadow: 0 4px 20px rgba(212,96,122,0.45); z-index: 20; transition: transform 0.15s; display: flex; align-items: center; justify-content: center; }
+.fab:hover { transform: scale(1.08); }
+
+/* Modals */
+.modal-bg { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-end; justify-content: center; }
+.modal-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.45); }
+.modal-sheet { position: relative; background: white; border-radius: 22px 22px 0 0; padding: 24px 20px 36px; width: 100%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 18px; color: #333; }
+.field-label { display: block; font-size: 12px; font-weight: 700; color: #888; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 6px; }
+.cancel-btn { flex: 1; padding: 13px; background: #f2f2f2; border: none; border-radius: 12px; font-size: 15px; cursor: pointer; font-weight: 600; color: #666; }
+.save-btn { flex: 2; padding: 13px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
+.save-btn:disabled { opacity: 0.5; }
+
+/* Token overlay */
+.token-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); padding: 20px; }
+.token-card { background: white; border-radius: 22px; padding: 32px 24px; width: 100%; max-width: 360px; }
+.token-card p { color: #888; font-size: 13px; margin-bottom: 20px; line-height: 1.6; }
+code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12px; }
+</style>
+</head>
+<body>
+
+<!-- Token Setup -->
+<div id="token-modal" style="display:none">
+  <div class="token-overlay">
+    <div class="token-card">
+      <div class="lock-title" style="margin-bottom:8px">設定 GitHub Token</div>
+      <p>需要 GitHub Personal Access Token 讀寫資料。請在 GitHub → Settings → Developer settings 建立有 <code>Contents: Read and write</code> 權限的 Fine-grained token。</p>
+      <label class="field-label">GitHub Token</label>
+      <input type="password" id="token-input" placeholder="ghp_... 或 github_pat_...">
+      <button class="primary-btn" onclick="saveTokenAndContinue()">儲存並繼續</button>
+    </div>
+  </div>
+</div>
+
+<!-- Lock Screen -->
+<div id="lock-screen">
+  <div class="lock-wrap">
+    <div class="lock-card">
+      <div class="lock-title">有空嗎 💕</div>
+      <div class="lock-sub">登記彼此的空閒時間</div>
+
+      <div id="step-user">
+        <p class="step-label">你是誰？</p>
+        <div class="user-btns">
+          <button class="user-btn ua" onclick="selectUser('a')">瓜ㄍㄧ</button>
+          <button class="user-btn" onclick="selectUser('b')">蛋餅</button>
+        </div>
+      </div>
+
+      <div id="step-pw" style="display:none">
+        <p class="step-label">你好，<strong id="greet-name"></strong>！輸入密碼解鎖</p>
+        <input type="password" id="pw-input" placeholder="密碼" onkeydown="if(event.key==='Enter')doUnlock()">
+        <button class="primary-btn" id="unlock-btn" onclick="doUnlock()">解鎖</button>
+        <div class="err" id="pw-err"></div>
+        <button class="back-link" onclick="backToUsers()">← 重新選擇</button>
+      </div>
+
+      <div id="step-tz" style="display:none">
+        <p class="step-label">設定你的時區</p>
+        <select id="tz-sel"></select>
+        <button class="primary-btn" id="tz-btn" onclick="saveTz()">確認</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="app" style="display:none">
+  <header>
+    <span class="h-title">有空嗎 💕</span>
+    <span class="badge" id="user-badge"></span>
+    <span class="tz-badge" id="tz-badge"></span>
+    <button class="icon-btn" id="refresh-btn" onclick="refreshData()" title="重新整理">🔄</button>
+    <button class="icon-btn" onclick="openSettings()" title="設定">⚙️</button>
+    <button class="icon-btn" onclick="lockApp()" title="鎖定">🔒</button>
+  </header>
+  <div id="day-list"></div>
+  <button class="fab" onclick="openAdd(null)" title="新增有空時段">＋</button>
+</div>
+
+<!-- Add Slot Modal -->
+<div id="add-modal" style="display:none">
+  <div class="modal-bg">
+    <div class="modal-overlay" onclick="closeAdd()"></div>
+    <div class="modal-sheet">
+      <div class="modal-title">新增有空時段</div>
+      <label class="field-label">日期</label>
+      <input type="date" id="add-date">
+      <label class="field-label">開始時間（你的時區）</label>
+      <input type="time" id="add-start">
+      <label class="field-label">結束時間（你的時區）</label>
+      <input type="time" id="add-end">
+      <label class="field-label">備註（選填）</label>
+      <input type="text" id="add-notes" placeholder="例：記得帶我去吃東西">
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeAdd()">取消</button>
+        <button class="save-btn" id="add-save-btn" onclick="addSlot()">儲存</button>
+      </div>
+      <div class="err" id="add-err"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Settings Modal -->
+<div id="settings-modal" style="display:none">
+  <div class="modal-bg">
+    <div class="modal-overlay" onclick="closeSettings()"></div>
+    <div class="modal-sheet">
+      <div class="modal-title">設定</div>
+      <label class="field-label">我的時區</label>
+      <select id="set-tz"></select>
+      <label class="field-label" style="margin-top:4px">GitHub Token</label>
+      <input type="password" id="set-token" placeholder="ghp_...">
+      <div class="modal-actions">
+        <button class="cancel-btn" onclick="closeSettings()">取消</button>
+        <button class="save-btn" id="set-save-btn" onclick="saveSettings()">儲存</button>
+      </div>
+      <div class="err" id="set-err"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const REPO = 'charliebai605/dailywork';
+const API_URL = `https://api.github.com/repos/${REPO}/contents/date/schedule.json`;
+
+const USERS = {
+  a: { name: '瓜ㄍㄧ', color: '#4A8FD4', light: '#EBF4FF' },
+  b: { name: '蛋餅',   color: '#D4607A', light: '#FFF0F3' }
+};
+
+const TZ_OPTS = [
+  { v: -720, l: 'UTC-12' },
+  { v: -660, l: 'UTC-11' },
+  { v: -600, l: 'UTC-10（夏威夷）' },
+  { v: -540, l: 'UTC-9' },
+  { v: -480, l: 'UTC-8（洛杉磯）' },
+  { v: -420, l: 'UTC-7（丹佛）' },
+  { v: -360, l: 'UTC-6（芝加哥）' },
+  { v: -300, l: 'UTC-5（紐約）' },
+  { v: -240, l: 'UTC-4' },
+  { v: -180, l: 'UTC-3（聖保羅）' },
+  { v: -120, l: 'UTC-2' },
+  { v:  -60, l: 'UTC-1' },
+  { v:    0, l: 'UTC+0（倫敦）' },
+  { v:   60, l: 'UTC+1（巴黎）' },
+  { v:  120, l: 'UTC+2（開羅）' },
+  { v:  180, l: 'UTC+3（莫斯科）' },
+  { v:  240, l: 'UTC+4（杜拜）' },
+  { v:  300, l: 'UTC+5' },
+  { v:  330, l: 'UTC+5:30（孟買）' },
+  { v:  360, l: 'UTC+6（達卡）' },
+  { v:  420, l: 'UTC+7（曼谷）' },
+  { v:  480, l: 'UTC+8（台北）' },
+  { v:  540, l: 'UTC+9（東京）' },
+  { v:  570, l: 'UTC+9:30（阿德萊德）' },
+  { v:  600, l: 'UTC+10（雪梨）' },
+  { v:  660, l: 'UTC+11' },
+  { v:  720, l: 'UTC+12（奧克蘭）' },
+  { v:  780, l: 'UTC+13' },
+  { v:  840, l: 'UTC+14' }
+];
+
+// ── State ──────────────────────────────────────────────
+let st = { user: null, pw: null, data: null, salt: null, sha: null };
+let pendingUser = null;
+
+// ── Crypto ─────────────────────────────────────────────
+async function deriveKey(pw, salt) {
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt, iterations: 100000, hash: 'SHA-256' },
+    km, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+  );
+}
+const b64e = b => btoa(String.fromCharCode(...new Uint8Array(b)));
+const b64d = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function enc(obj, pw, existingSalt) {
+  const salt = existingSalt ? b64d(existingSalt) : crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKey(pw, salt);
+  const data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, new TextEncoder().encode(JSON.stringify(obj)));
+  return { v: 1, salt: b64e(salt), iv: b64e(iv), data: b64e(data) };
+}
+
+async function dec(shell, pw) {
+  const key = await deriveKey(pw, b64d(shell.salt));
+  const raw = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64d(shell.iv) }, key, b64d(shell.data));
+  return JSON.parse(new TextDecoder().decode(raw));
+}
+
+// ── GitHub API ──────────────────────────────────────────
+const getToken = () => localStorage.getItem('github_token') || '';
+
+async function ghGet() {
+  const token = getToken();
+  if (!token) throw new Error('no_token');
+  const r = await fetch(API_URL, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+  if (r.status === 404) return null;
+  if (!r.ok) throw new Error('fetch_failed');
+  const j = await r.json();
+  const content = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, '')))));
+  return { content, sha: j.sha };
+}
+
+async function ghPut(encrypted, sha) {
+  const token = getToken();
+  if (!token) throw new Error('no_token');
+  const body = {
+    message: 'update: schedule',
+    content: btoa(unescape(encodeURIComponent(JSON.stringify(encrypted, null, 2))))
+  };
+  if (sha) body.sha = sha;
+  const r = await fetch(API_URL, {
+    method: 'PUT',
+    headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  if (!r.ok) throw new Error('save_failed');
+  return (await r.json()).content.sha;
+}
+
+// ── Time helpers ────────────────────────────────────────
+function localToUTC(dateStr, timeStr, tzOff) {
+  const [y, mo, d] = dateStr.split('-').map(Number);
+  const [h, mi] = timeStr.split(':').map(Number);
+  return new Date(Date.UTC(y, mo - 1, d, h, mi) - tzOff * 60000).toISOString();
+}
+
+function utcParts(iso, tzOff) {
+  const d = new Date(new Date(iso).getTime() + tzOff * 60000);
+  return {
+    date: `${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`,
+    time: `${String(d.getUTCHours()).padStart(2,'0')}:${String(d.getUTCMinutes()).padStart(2,'0')}`
+  };
+}
+
+function fmtTime(iso, tzOff) {
+  const { time } = utcParts(iso, tzOff);
+  const [h, m] = time.split(':').map(Number);
+  return `${h >= 12 ? '下午' : '上午'} ${h % 12 || 12}:${String(m).padStart(2,'0')}`;
+}
+
+function fmtDate(ds) {
+  const [y, mo, d] = ds.split('-').map(Number);
+  const dow = ['日','一','二','三','四','五','六'][new Date(y, mo - 1, d).getDay()];
+  return `${mo}月${d}日（週${dow}）`;
+}
+
+function todayStr(tzOff) { return utcParts(new Date().toISOString(), tzOff).date; }
+
+// ── Slot helpers ────────────────────────────────────────
+const myTz    = () => st.data?.users?.[st.user]?.tzOffset ?? null;
+const other   = () => st.user === 'a' ? 'b' : 'a';
+const otherTz = () => st.data?.users?.[other()]?.tzOffset ?? null;
+
+function normalize(data) {
+  if (!data.users) data.users = {};
+  if (!data.users.a) data.users.a = { tzOffset: null };
+  if (!data.users.b) data.users.b = { tzOffset: null };
+  if (!data.slots)  data.slots  = [];
+  return data;
+}
+
+function overlaps(slA, slB) {
+  const res = [];
+  for (const a of slA) for (const b of slB) {
+    const s = Math.max(+new Date(a.startUTC), +new Date(b.startUTC));
+    const e = Math.min(+new Date(a.endUTC),   +new Date(b.endUTC));
+    if (s < e) res.push({ startUTC: new Date(s).toISOString(), endUTC: new Date(e).toISOString() });
+  }
+  return res;
+}
+
+function tzLabel(v) { return TZ_OPTS.find(t => t.v === v)?.l ?? `UTC${v >= 0 ? '+' : ''}${v/60}`; }
+
+// ── Render ──────────────────────────────────────────────
+function renderDayList() {
+  const tz = myTz();
+  if (tz === null) return;
+  const today = todayStr(tz);
+  const allSlots = st.data?.slots ?? [];
+  const mySlots    = allSlots.filter(s => s.user === st.user);
+  const theirSlots = allSlots.filter(s => s.user === other());
+  const oTz = otherTz();
+
+  const dates = [];
+  for (let i = 0; i < 14; i++) {
+    const { date } = utcParts(new Date(Date.now() + i * 86400000).toISOString(), tz);
+    if (!dates.includes(date)) dates.push(date);
+  }
+
+  function slotHTML(slots, isOwn) {
+    return slots
+      .filter(s => utcParts(s.startUTC, tz).date === currentDate)
+      .map(s => {
+        const u = USERS[s.user];
+        const t1 = fmtTime(s.startUTC, tz);
+        const t2 = fmtTime(s.endUTC, tz);
+        let otherLine = '';
+        if (isOwn && oTz !== null && oTz !== tz) {
+          otherLine = `<div class="slot-other">${USERS[other()].name}看到：${fmtTime(s.startUTC, oTz)} – ${fmtTime(s.endUTC, oTz)}</div>`;
+        } else if (!isOwn) {
+          const ownerTzVal = st.data.users[s.user]?.tzOffset;
+          if (ownerTzVal != null && ownerTzVal !== tz) {
+            otherLine = `<div class="slot-other">${u.name}的時區：${fmtTime(s.startUTC, ownerTzVal)} – ${fmtTime(s.endUTC, ownerTzVal)}</div>`;
+          }
+        }
+        const del = isOwn ? `<button class="del-btn" onclick="deleteSlot('${s.id}')">✕</button>` : '';
+        const note = s.notes ? `<div class="slot-note">"${s.notes}"</div>` : '';
+        return `<div class="slot-card" style="border-left-color:${u.color};background:${u.light}">
+          <div class="slot-row">
+            <span class="slot-who" style="color:${u.color}">${u.name}</span>
+            <span class="slot-time">${t1} – ${t2}</span>
+            ${del}
+          </div>
+          ${otherLine}${note}
+        </div>`;
+      }).join('');
+  }
+
+  let html = '';
+  for (const date of dates) {
+    currentDate = date; // used inside slotHTML closure
+    const dayMine   = mySlots.filter(s    => utcParts(s.startUTC, tz).date === date);
+    const dayTheirs = theirSlots.filter(s => utcParts(s.startUTC, tz).date === date);
+    const ols = overlaps(dayMine, dayTheirs);
+
+    const mineHTML   = slotHTML(mySlots,    true);
+    const theirHTML  = slotHTML(theirSlots, false);
+    const overlapHTML = ols.map(o =>
+      `<div class="overlap-card">✨ 一起有空：${fmtTime(o.startUTC, tz)} – ${fmtTime(o.endUTC, tz)}</div>`
+    ).join('');
+
+    const isEmpty = !dayMine.length && !dayTheirs.length;
+
+    html += `<div class="day-section">
+      <div class="day-header">
+        <span>${fmtDate(date)}</span>
+        ${date === today ? '<span class="today-tag">今天</span>' : ''}
+      </div>
+      ${isEmpty ? '<div class="empty-day">還沒有人有空 😴</div>' : ''}
+      ${mineHTML}${theirHTML}${overlapHTML}
+      <button class="day-add-btn" onclick="openAdd('${date}')">＋ 加入有空時段</button>
+    </div>`;
+  }
+  document.getElementById('day-list').innerHTML = html;
+}
+let currentDate = '';
+
+// ── Lock / Unlock ────────────────────────────────────────
+function selectUser(u) {
+  pendingUser = u;
+  document.getElementById('step-user').style.display = 'none';
+  document.getElementById('greet-name').textContent = USERS[u].name;
+  document.getElementById('step-pw').style.display = '';
+  document.getElementById('pw-input').focus();
+}
+
+function backToUsers() {
+  pendingUser = null;
+  document.getElementById('step-pw').style.display = 'none';
+  document.getElementById('step-user').style.display = '';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').textContent = '';
+}
+
+async function doUnlock() {
+  const pw = document.getElementById('pw-input').value;
+  const errEl = document.getElementById('pw-err');
+  errEl.textContent = '';
+  if (!pw) { errEl.textContent = '請輸入密碼'; return; }
+
+  const btn = document.getElementById('unlock-btn');
+  btn.textContent = '驗證中…';
+  btn.disabled = true;
+
+  try {
+    if (!getToken()) { showTokenModal(); return; }
+
+    const file = await ghGet();
+    let data, salt = null, sha = null;
+
+    if (!file) {
+      data = normalize({ users: { a: { tzOffset: null }, b: { tzOffset: null } }, slots: [] });
+    } else {
+      try {
+        data = normalize(await dec(file.content, pw));
+        salt = file.content.salt;
+        sha  = file.sha;
+      } catch {
+        errEl.textContent = '密碼錯誤';
+        return;
+      }
+    }
+
+    st = { user: pendingUser, pw, data, salt, sha };
+
+    if (st.data.users[st.user]?.tzOffset == null) {
+      showTzStep();
+    } else {
+      enterApp();
+    }
+  } catch (e) {
+    if (e.message === 'no_token') showTokenModal();
+    else errEl.textContent = '連線失敗，請確認網路與 Token';
+  } finally {
+    btn.textContent = '解鎖';
+    btn.disabled = false;
+  }
+}
+
+function showTzStep() {
+  document.getElementById('step-pw').style.display = 'none';
+  const detected = -new Date().getTimezoneOffset();
+  document.getElementById('tz-sel').innerHTML =
+    TZ_OPTS.map(t => `<option value="${t.v}"${t.v === detected ? ' selected' : ''}>${t.l}</option>`).join('');
+  document.getElementById('step-tz').style.display = '';
+}
+
+async function saveTz() {
+  const tz = parseInt(document.getElementById('tz-sel').value);
+  st.data.users[st.user].tzOffset = tz;
+  const btn = document.getElementById('tz-btn');
+  btn.textContent = '儲存中…';
+  btn.disabled = true;
+  try {
+    const encrypted = await enc(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(encrypted, st.sha);
+    st.salt = encrypted.salt;
+    enterApp();
+  } catch {
+    alert('儲存時區失敗，請重試');
+    st.data.users[st.user].tzOffset = null;
+  } finally {
+    btn.textContent = '確認';
+    btn.disabled = false;
+  }
+}
+
+function enterApp() {
+  document.getElementById('lock-screen').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  const u = USERS[st.user];
+  const tz = myTz();
+  document.getElementById('user-badge').textContent = u.name;
+  document.getElementById('user-badge').style.background = u.color;
+  document.getElementById('tz-badge').textContent = tzLabel(tz);
+  renderDayList();
+}
+
+function lockApp() {
+  st = { user: null, pw: null, data: null, salt: null, sha: null };
+  pendingUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('lock-screen').style.display = '';
+  document.getElementById('step-user').style.display = '';
+  document.getElementById('step-pw').style.display = 'none';
+  document.getElementById('step-tz').style.display = 'none';
+  document.getElementById('pw-input').value = '';
+  document.getElementById('pw-err').textContent = '';
+}
+
+// ── Refresh ─────────────────────────────────────────────
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.textContent = '⏳';
+  btn.disabled = true;
+  try {
+    const file = await ghGet();
+    if (file) {
+      const data = normalize(await dec(file.content, st.pw));
+      st.data = data;
+      st.salt = file.content.salt;
+      st.sha  = file.sha;
+      renderDayList();
+    }
+  } catch { alert('重新整理失敗'); }
+  finally { btn.textContent = '🔄'; btn.disabled = false; }
+}
+
+// ── Add Slot ─────────────────────────────────────────────
+function openAdd(dateStr) {
+  document.getElementById('add-date').value  = dateStr || '';
+  document.getElementById('add-start').value = '';
+  document.getElementById('add-end').value   = '';
+  document.getElementById('add-notes').value = '';
+  document.getElementById('add-err').textContent = '';
+  document.getElementById('add-modal').style.display = '';
+}
+
+function closeAdd() { document.getElementById('add-modal').style.display = 'none'; }
+
+async function addSlot() {
+  const date  = document.getElementById('add-date').value;
+  const start = document.getElementById('add-start').value;
+  const end   = document.getElementById('add-end').value;
+  const notes = document.getElementById('add-notes').value.trim();
+  const errEl = document.getElementById('add-err');
+  errEl.textContent = '';
+  if (!date || !start || !end) { errEl.textContent = '請填入日期和時間'; return; }
+  if (start >= end) { errEl.textContent = '結束時間必須晚於開始時間'; return; }
+
+  const tz = myTz();
+  const slot = {
+    id:       Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    user:     st.user,
+    startUTC: localToUTC(date, start, tz),
+    endUTC:   localToUTC(date, end,   tz),
+    notes
+  };
+
+  st.data.slots.push(slot);
+  const btn = document.getElementById('add-save-btn');
+  btn.textContent = '儲存中…';
+  btn.disabled = true;
+  try {
+    const encrypted = await enc(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(encrypted, st.sha);
+    st.salt = encrypted.salt;
+    closeAdd();
+    renderDayList();
+  } catch {
+    errEl.textContent = '儲存失敗，請重試';
+    st.data.slots.pop();
+  } finally {
+    btn.textContent = '儲存';
+    btn.disabled = false;
+  }
+}
+
+// ── Delete Slot ──────────────────────────────────────────
+async function deleteSlot(id) {
+  if (!confirm('確定要刪除這個時段？')) return;
+  const idx = st.data.slots.findIndex(s => s.id === id);
+  if (idx === -1) return;
+  const [removed] = st.data.slots.splice(idx, 1);
+  try {
+    const encrypted = await enc(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(encrypted, st.sha);
+    st.salt = encrypted.salt;
+    renderDayList();
+  } catch {
+    st.data.slots.splice(idx, 0, removed);
+    alert('刪除失敗，請重試');
+    renderDayList();
+  }
+}
+
+// ── Settings ─────────────────────────────────────────────
+function openSettings() {
+  const tz = myTz();
+  document.getElementById('set-tz').innerHTML =
+    TZ_OPTS.map(t => `<option value="${t.v}"${t.v === tz ? ' selected' : ''}>${t.l}</option>`).join('');
+  document.getElementById('set-token').value = getToken();
+  document.getElementById('set-err').textContent = '';
+  document.getElementById('settings-modal').style.display = '';
+}
+
+function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
+
+async function saveSettings() {
+  const newTz    = parseInt(document.getElementById('set-tz').value);
+  const newToken = document.getElementById('set-token').value.trim();
+  const errEl    = document.getElementById('set-err');
+  errEl.textContent = '';
+
+  if (newToken) localStorage.setItem('github_token', newToken);
+  else localStorage.removeItem('github_token');
+
+  const oldTz = myTz();
+  if (newTz !== oldTz) {
+    st.data.users[st.user].tzOffset = newTz;
+    const btn = document.getElementById('set-save-btn');
+    btn.textContent = '儲存中…';
+    btn.disabled = true;
+    try {
+      const encrypted = await enc(st.data, st.pw, st.salt);
+      st.sha  = await ghPut(encrypted, st.sha);
+      st.salt = encrypted.salt;
+    } catch {
+      errEl.textContent = '儲存失敗';
+      st.data.users[st.user].tzOffset = oldTz;
+      btn.textContent = '儲存';
+      btn.disabled = false;
+      return;
+    }
+    btn.textContent = '儲存';
+    btn.disabled = false;
+  }
+
+  closeSettings();
+  enterApp();
+}
+
+// ── Token Modal ──────────────────────────────────────────
+function showTokenModal() {
+  document.getElementById('token-input').value = getToken();
+  document.getElementById('token-modal').style.display = '';
+}
+
+function saveTokenAndContinue() {
+  const token = document.getElementById('token-input').value.trim();
+  if (!token) { alert('請輸入 GitHub Token'); return; }
+  localStorage.setItem('github_token', token);
+  document.getElementById('token-modal').style.display = 'none';
+  doUnlock();
+}
+</script>
+</body>
+</html>
