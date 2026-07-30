@@ -127,15 +127,37 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 
 /* ── Floating background photos ── */
 #bg-photos { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
-.fp { position: absolute; border-radius: 10px; overflow: hidden; opacity: 0.28; box-shadow: 0 4px 20px rgba(0,0,0,0.18); will-change: transform; }
+.fp { position: absolute; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.18); will-change: transform, opacity; }
 .fp img { width: 100%; display: block; }
 #lock-screen, #app { position: relative; z-index: 1; }
 
-@keyframes fp1 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 30%{transform:rotate(var(--r)) translate(28px,-48px)} 65%{transform:rotate(var(--r)) translate(-18px,-28px)} }
-@keyframes fp2 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 40%{transform:rotate(var(--r)) translate(-32px,-52px)} 70%{transform:rotate(var(--r)) translate(22px,-32px)} }
-@keyframes fp3 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 20%{transform:rotate(var(--r)) translate(38px,-22px)} 55%{transform:rotate(var(--r)) translate(14px,-54px)} 80%{transform:rotate(var(--r)) translate(-26px,-36px)} }
-@keyframes fp4 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 35%{transform:rotate(var(--r)) translate(-42px,-28px)} 68%{transform:rotate(var(--r)) translate(32px,-56px)} }
-@keyframes fp5 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 25%{transform:rotate(var(--r)) translate(22px,-62px)} 58%{transform:rotate(var(--r)) translate(-36px,-22px)} 82%{transform:rotate(var(--r)) translate(18px,-42px)} }
+/* ── Floating broadcast messages ── */
+.fb { position: absolute; padding: 9px 18px; border-radius: 30px; font-size: 15px; font-weight: 800;
+      word-break: break-word; max-width: 240px; box-shadow: 0 4px 20px rgba(0,0,0,0.14);
+      pointer-events: none; will-change: transform, opacity; }
+
+/* ── Broadcast button ── */
+#broadcast-btn {
+  position: fixed; bottom: 24px; left: 24px; width: 52px; height: 52px;
+  border-radius: 50%; background: white; border: none; font-size: 22px;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 25;
+  display: none; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+#broadcast-btn:hover { transform: scale(1.08); }
+#broadcast-btn.visible { display: flex; }
+
+/* ── Broadcast modal ── */
+.broadcast-overlay { position: fixed; inset: 0; z-index: 150; display: flex; align-items: flex-end; justify-content: center; background: rgba(0,0,0,0.4); }
+.broadcast-card { background: white; border-radius: 22px 22px 0 0; padding: 22px 20px 40px; width: 100%; max-width: 500px; }
+.broadcast-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+.broadcast-title { font-size: 16px; font-weight: 800; color: #D4607A; }
+#broadcast-input { width: 100%; border: 2px solid #f0d0d8; border-radius: 12px; padding: 12px; font-size: 15px; resize: none; outline: none; font-family: inherit; box-sizing: border-box; }
+#broadcast-input:focus { border-color: #D4607A; }
+.broadcast-msgs { margin-top: 14px; max-height: 160px; overflow-y: auto; }
+.broadcast-msg-item { display: flex; gap: 8px; padding: 6px 0; border-bottom: 1px solid #fdf0f3; font-size: 13px; color: #555; align-items: baseline; }
+.broadcast-msg-item .bm-text { flex: 1; }
+.broadcast-msg-item .bm-time { color: #bbb; font-size: 11px; white-space: nowrap; }
 
 /* ── Token overlay ── */
 .token-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); padding: 20px; }
@@ -226,6 +248,9 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
   <button class="save-btn" id="save-action-btn" onclick="saveChanges()">儲存</button>
 </div>
 
+<!-- Broadcast button -->
+<button id="broadcast-btn" onclick="openBroadcast()" title="廣播版">📣</button>
+
 <!-- Doodle button -->
 <button id="doodle-btn" onclick="openDoodle()" title="塗鴉版">
   ✏️
@@ -246,6 +271,21 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
       </div>
     </div>
     <canvas id="doodle-canvas"></canvas>
+  </div>
+</div>
+
+<!-- Broadcast Modal -->
+<div id="broadcast-modal" style="display:none">
+  <div class="broadcast-overlay" onclick="closeBroadcastIfBg(event)">
+    <div class="broadcast-card">
+      <div class="broadcast-header">
+        <span class="broadcast-title">廣播版 📣</span>
+        <button class="doodle-tool-btn" onclick="closeBroadcast()">✕</button>
+      </div>
+      <textarea id="broadcast-input" rows="2" placeholder="輸入想說的話…（最多 30 字）" maxlength="30"></textarea>
+      <button class="primary-btn" onclick="saveBroadcast()" id="broadcast-save-btn" style="margin-top:12px;width:100%">發送</button>
+      <div class="broadcast-msgs" id="broadcast-msgs-list"></div>
+    </div>
   </div>
 </div>
 
@@ -667,9 +707,11 @@ function enterApp() {
   document.getElementById('user-badge').style.background = u.color;
   document.getElementById('tz-badge').textContent        = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
   document.getElementById('doodle-btn').classList.add('visible');
+  document.getElementById('broadcast-btn').classList.add('visible');
   updateDoodleDot();
   initDragListeners();
   renderDayList();
+  startBroadcast();
 }
 
 function lockApp() {
@@ -680,6 +722,8 @@ function lockApp() {
   document.getElementById('app').style.display         = 'none';
   document.getElementById('save-bar').style.display    = 'none';
   document.getElementById('doodle-btn').classList.remove('visible');
+  document.getElementById('broadcast-btn').classList.remove('visible');
+  stopBroadcast();
   document.getElementById('lock-screen').style.display = '';
   document.getElementById('step-pw').style.display     = '';
   document.getElementById('step-user').style.display   = 'none';
@@ -897,33 +941,195 @@ function initDoodleCanvas(canvas, ctx) {
 
 // ── Floating background photos ─────────────────────────
 (function initBgPhotos() {
-  const ANIMS = ['fp1','fp2','fp3','fp4','fp5'];
-  const N = 21;
-  const c = document.getElementById('bg-photos');
-  for (let i = 0; i < N; i++) {
-    const src  = `photos/p${String(i+1).padStart(2,'0')}.jpg`;
-    const left = ((i * 4.7 + 2) % 92).toFixed(1);
-    const top  = ((i * 7.3 + 3) % 88).toFixed(1);
-    const rot  = (-12 + (i * 5.3) % 24).toFixed(1);
-    const size = (110 + (i * 13) % 70).toFixed(0);
-    const dur  = (26 + (i * 3.7) % 20).toFixed(1);
-    const del  = (-(i * 4.1) % 44).toFixed(1);
-    const anim = ANIMS[i % 5];
+  const PHOTOS = Array.from({length: 21}, (_, i) => `photos/p${String(i+1).padStart(2,'0')}.jpg`);
+  let idx = 0;
+  const container = document.getElementById('bg-photos');
 
-    const el = document.createElement('div');
-    el.className = 'fp';
-    el.style.cssText =
-      `left:${left}vw;top:${top}vh;width:${size}px;--r:${rot}deg;` +
-      `animation:${anim} ${dur}s ${del}s ease-in-out infinite;`;
-
-    const img = document.createElement('img');
-    img.src = src;
-    img.loading = 'lazy';
-    img.draggable = false;
-    el.appendChild(img);
-    c.appendChild(el);
+  function cornerConfigs(sz) {
+    const W = window.innerWidth, H = window.innerHeight;
+    return [
+      { sx: -sz, sy: -sz,  dx: W+sz,    dy: H+sz    }, // TL → BR
+      { sx: W,   sy: -sz,  dx: -(W+sz), dy: H+sz    }, // TR → BL
+      { sx: -sz, sy: H,    dx: W+sz,    dy: -(H+sz) }, // BL → TR
+      { sx: W,   sy: H,    dx: -(W+sz), dy: -(H+sz) }, // BR → TL
+    ];
   }
+
+  function spawnGroup() {
+    const count   = 2 + Math.floor(Math.random() * 2);
+    const configs = cornerConfigs(160);
+    const cfg     = configs[Math.floor(Math.random() * 4)];
+    const speed   = 55 + Math.random() * 35;
+    const diag    = Math.sqrt(cfg.dx * cfg.dx + cfg.dy * cfg.dy);
+
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const sz  = 110 + Math.random() * 70;
+        const ox  = (Math.random() - 0.5) * 120;
+        const oy  = (Math.random() - 0.5) * 120;
+        const rot = -14 + Math.random() * 28;
+        const dur = diag / speed;
+
+        const name = 'fpa' + Math.random().toString(36).slice(2, 8);
+        const sEl  = document.createElement('style');
+        sEl.textContent = `@keyframes ${name}{` +
+          `0%{transform:translate(0,0) rotate(${rot}deg);opacity:0}` +
+          `12%{opacity:0.32}88%{opacity:0.32}` +
+          `100%{transform:translate(${cfg.dx|0}px,${cfg.dy|0}px) rotate(${rot}deg);opacity:0}}`;
+        document.head.appendChild(sEl);
+
+        const el  = document.createElement('div');
+        el.className = 'fp';
+        el.style.cssText = `left:${(cfg.sx+ox)|0}px;top:${(cfg.sy+oy)|0}px;` +
+          `width:${sz|0}px;animation:${name} ${dur.toFixed(1)}s linear forwards`;
+
+        const img = document.createElement('img');
+        img.src = PHOTOS[idx++ % PHOTOS.length];
+        img.loading = 'lazy';
+        img.draggable = false;
+        el.appendChild(img);
+        container.appendChild(el);
+
+        setTimeout(() => { el.remove(); sEl.remove(); }, dur * 1000 + 500);
+      }, i * (350 + Math.random() * 350));
+    }
+    setTimeout(spawnGroup, 2500 + Math.random() * 3500);
+  }
+
+  setTimeout(spawnGroup, 600);
 })();
+
+// ── Broadcast ───────────────────────────────────────────
+let activeBroadcasts = 0;
+let broadcastTimer   = null;
+
+function getRecentBroadcasts() {
+  const msgs   = st.data?.broadcast;
+  if (!msgs?.length) return [];
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  return msgs.filter(m => m.ts > cutoff);
+}
+
+function spawnBroadcastEl(msg) {
+  const W = window.innerWidth, H = window.innerHeight;
+  const corners = [
+    { sx: -280, sy: -60,  dx: W+280,    dy: H+60    },
+    { sx: W,    sy: -60,  dx: -(W+280), dy: H+60    },
+    { sx: -280, sy: H,    dx: W+280,    dy: -(H+60) },
+    { sx: W,    sy: H,    dx: -(W+280), dy: -(H+60) },
+  ];
+  const cfg   = corners[Math.floor(Math.random() * 4)];
+  const speed = 60 + Math.random() * 40;
+  const diag  = Math.sqrt(cfg.dx * cfg.dx + cfg.dy * cfg.dy);
+  const dur   = diag / speed;
+  const oy    = (Math.random() - 0.5) * 80;
+
+  const isGua = msg.by === 'gua';
+  const bg    = isGua ? 'rgba(212,96,122,0.88)' : 'rgba(255,200,80,0.92)';
+  const fg    = isGua ? 'white' : '#7b4a00';
+
+  const name = 'fbb' + Math.random().toString(36).slice(2, 8);
+  const sEl  = document.createElement('style');
+  sEl.textContent = `@keyframes ${name}{` +
+    `0%{transform:translate(0,0);opacity:0}` +
+    `12%{opacity:0.92}88%{opacity:0.92}` +
+    `100%{transform:translate(${cfg.dx|0}px,${cfg.dy|0}px);opacity:0}}`;
+  document.head.appendChild(sEl);
+
+  const el = document.createElement('div');
+  el.className = 'fb';
+  el.style.cssText = `left:${cfg.sx|0}px;top:${(cfg.sy+oy)|0}px;` +
+    `background:${bg};color:${fg};animation:${name} ${dur.toFixed(1)}s linear forwards`;
+  el.textContent = msg.text;
+
+  document.getElementById('bg-photos').appendChild(el);
+  activeBroadcasts++;
+
+  setTimeout(() => {
+    el.remove(); sEl.remove();
+    activeBroadcasts = Math.max(0, activeBroadcasts - 1);
+  }, dur * 1000 + 500);
+}
+
+function scheduleBroadcast() {
+  const msgs = getRecentBroadcasts();
+  if (!msgs.length)              { broadcastTimer = setTimeout(scheduleBroadcast, 5000); return; }
+  if (activeBroadcasts >= 5)     { broadcastTimer = setTimeout(scheduleBroadcast, 2000); return; }
+  spawnBroadcastEl(msgs[Math.floor(Math.random() * msgs.length)]);
+  broadcastTimer = setTimeout(scheduleBroadcast, 1500 + Math.random() * 2500);
+}
+
+function startBroadcast() {
+  if (broadcastTimer) return;
+  broadcastTimer = setTimeout(scheduleBroadcast, 1000);
+}
+
+function stopBroadcast() {
+  clearTimeout(broadcastTimer);
+  broadcastTimer = null;
+}
+
+function openBroadcast() {
+  document.getElementById('broadcast-modal').style.display = '';
+  document.getElementById('broadcast-input').value = '';
+  renderBroadcastList();
+  setTimeout(() => document.getElementById('broadcast-input').focus(), 50);
+}
+
+function closeBroadcast() {
+  document.getElementById('broadcast-modal').style.display = 'none';
+}
+
+function closeBroadcastIfBg(e) {
+  if (e.target.classList.contains('broadcast-overlay')) closeBroadcast();
+}
+
+function renderBroadcastList() {
+  const msgs = getRecentBroadcasts();
+  const el   = document.getElementById('broadcast-msgs-list');
+  if (!msgs.length) {
+    el.innerHTML = '<p style="color:#bbb;font-size:13px;padding:10px 0;text-align:center">本週還沒有廣播</p>';
+    return;
+  }
+  el.innerHTML = msgs.slice().reverse().map(m => {
+    const u    = USERS[m.by]?.name ?? m.by;
+    const clr  = USERS[m.by]?.color ?? '#888';
+    const d    = new Date(m.ts);
+    const time = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    return `<div class="broadcast-msg-item">` +
+      `<span style="color:${clr};font-weight:700;white-space:nowrap">${u}</span>` +
+      `<span class="bm-text">${m.text}</span>` +
+      `<span class="bm-time">${time}</span></div>`;
+  }).join('');
+}
+
+async function saveBroadcast() {
+  const text = document.getElementById('broadcast-input').value.trim();
+  if (!text) return;
+  const btn  = document.getElementById('broadcast-save-btn');
+  btn.textContent = '發送中…'; btn.disabled = true;
+  try {
+    if (!st.data.broadcast) st.data.broadcast = [];
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    st.data.broadcast = st.data.broadcast.filter(m => m.ts > cutoff);
+    const newMsg = { text, by: st.user, ts: Date.now() };
+    st.data.broadcast.push(newMsg);
+    syncTokenToData();
+    const latest = await ghGet();
+    if (latest) { st.sha = latest.sha; }
+    const enc = await encData(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(enc, st.sha);
+    st.salt = enc.salt;
+    document.getElementById('broadcast-input').value = '';
+    renderBroadcastList();
+    spawnBroadcastEl(newMsg);
+    if (!broadcastTimer) startBroadcast();
+  } catch {
+    alert('發送失敗，請重試');
+  } finally {
+    btn.textContent = '發送'; btn.disabled = false;
+  }
+}
 </script>
 </body>
 </html>
