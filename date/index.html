@@ -541,16 +541,32 @@ function initDragListeners() {
   dl.addEventListener('pointerdown', e => {
     const cell = e.target.closest('[data-mine]');
     if (!cell) return;
-    e.preventDefault();
-    const dateStr = cell.dataset.date;
-    const hour    = parseInt(cell.dataset.hour);
-    dragState = { painting: !isAvail(st.user, dateStr, hour), dateStr };
-    applyDrag(dateStr, hour);
-    dl.setPointerCapture(e.pointerId);
+    // Don't preventDefault yet — wait to see if this is a scroll or a drag
+    dragState = {
+      painting:  !isAvail(st.user, cell.dataset.date, parseInt(cell.dataset.hour)),
+      dateStr:   cell.dataset.date,
+      startHour: parseInt(cell.dataset.hour),
+      startX:    e.clientX,
+      startY:    e.clientY,
+      locked:    false,
+      pid:       e.pointerId,
+    };
   });
 
   dl.addEventListener('pointermove', e => {
     if (!dragState) return;
+    const dx = Math.abs(e.clientX - dragState.startX);
+    const dy = Math.abs(e.clientY - dragState.startY);
+
+    if (!dragState.locked) {
+      if (dx < 6 && dy < 6) return;          // too small to tell yet
+      if (dy > dx) { dragState = null; return; } // mostly vertical → let it scroll
+      // Horizontal drag confirmed — lock in
+      dragState.locked = true;
+      dl.setPointerCapture(dragState.pid);
+      applyDrag(dragState.dateStr, dragState.startHour); // apply starting cell
+    }
+
     e.preventDefault();
     const el   = document.elementFromPoint(e.clientX, e.clientY);
     const cell = el?.closest?.('[data-mine]');
@@ -558,9 +574,16 @@ function initDragListeners() {
     applyDrag(dragState.dateStr, parseInt(cell.dataset.hour));
   });
 
-  const endDrag = () => { dragState = null; };
-  dl.addEventListener('pointerup',     endDrag);
-  dl.addEventListener('pointercancel', endDrag);
+  dl.addEventListener('pointerup', e => {
+    if (!dragState) return;
+    if (!dragState.locked) {
+      // Was a plain tap with no horizontal movement — toggle the cell
+      dragState.locked = true;
+      applyDrag(dragState.dateStr, dragState.startHour);
+    }
+    dragState = null;
+  });
+  dl.addEventListener('pointercancel', () => { dragState = null; });
 }
 
 function applyDrag(dateStr, hour) {
