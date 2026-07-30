@@ -943,60 +943,55 @@ function initDoodleCanvas(canvas, ctx) {
 (function initBgPhotos() {
   const PHOTOS = Array.from({length: 21}, (_, i) => `photos/p${String(i+1).padStart(2,'0')}.jpg`);
   let idx = 0;
+  let active = 0;
+  const MAX = 3;
   const container = document.getElementById('bg-photos');
 
-  function cornerConfigs(sz) {
-    const W = window.innerWidth, H = window.innerHeight;
-    return [
-      { sx: -sz, sy: -sz,  dx: W+sz,    dy: H+sz    }, // TL → BR
-      { sx: W,   sy: -sz,  dx: -(W+sz), dy: H+sz    }, // TR → BL
-      { sx: -sz, sy: H,    dx: W+sz,    dy: -(H+sz) }, // BL → TR
-      { sx: W,   sy: H,    dx: -(W+sz), dy: -(H+sz) }, // BR → TL
+  function spawn() {
+    if (active >= MAX) return;
+    const W  = window.innerWidth, H = window.innerHeight;
+    const sz = 120 + Math.random() * 80;
+    const corners = [
+      { sx: -sz, sy: -sz, dx: W+sz,    dy: H+sz    },
+      { sx: W,   sy: -sz, dx: -(W+sz), dy: H+sz    },
+      { sx: -sz, sy: H,   dx: W+sz,    dy: -(H+sz) },
+      { sx: W,   sy: H,   dx: -(W+sz), dy: -(H+sz) },
     ];
+    const cfg  = corners[Math.floor(Math.random() * 4)];
+    const diag = Math.sqrt(cfg.dx * cfg.dx + cfg.dy * cfg.dy);
+    const dur  = diag / (60 + Math.random() * 30);
+    const rot  = -14 + Math.random() * 28;
+
+    const name = 'fpa' + Math.random().toString(36).slice(2, 8);
+    const sEl  = document.createElement('style');
+    sEl.textContent = `@keyframes ${name}{` +
+      `0%{transform:translate(0,0) rotate(${rot}deg);opacity:0}` +
+      `12%{opacity:0.6}88%{opacity:0.6}` +
+      `100%{transform:translate(${cfg.dx|0}px,${cfg.dy|0}px) rotate(${rot}deg);opacity:0}}`;
+    document.head.appendChild(sEl);
+
+    const el = document.createElement('div');
+    el.className = 'fp';
+    el.style.cssText = `left:${cfg.sx|0}px;top:${cfg.sy|0}px;` +
+      `width:${sz|0}px;animation:${name} ${dur.toFixed(1)}s linear forwards`;
+
+    const img = document.createElement('img');
+    img.src = PHOTOS[idx++ % PHOTOS.length];
+    img.loading = 'lazy';
+    img.draggable = false;
+    el.appendChild(img);
+    container.appendChild(el);
+    active++;
+
+    setTimeout(() => {
+      el.remove(); sEl.remove();
+      active = Math.max(0, active - 1);
+      setTimeout(spawn, 1000 + Math.random() * 2000);
+    }, dur * 1000 + 500);
   }
 
-  function spawnGroup() {
-    const count   = 2 + Math.floor(Math.random() * 2);
-    const configs = cornerConfigs(160);
-    const cfg     = configs[Math.floor(Math.random() * 4)];
-    const speed   = 55 + Math.random() * 35;
-    const diag    = Math.sqrt(cfg.dx * cfg.dx + cfg.dy * cfg.dy);
-
-    for (let i = 0; i < count; i++) {
-      setTimeout(() => {
-        const sz  = 110 + Math.random() * 70;
-        const ox  = (Math.random() - 0.5) * 120;
-        const oy  = (Math.random() - 0.5) * 120;
-        const rot = -14 + Math.random() * 28;
-        const dur = diag / speed;
-
-        const name = 'fpa' + Math.random().toString(36).slice(2, 8);
-        const sEl  = document.createElement('style');
-        sEl.textContent = `@keyframes ${name}{` +
-          `0%{transform:translate(0,0) rotate(${rot}deg);opacity:0}` +
-          `12%{opacity:0.32}88%{opacity:0.32}` +
-          `100%{transform:translate(${cfg.dx|0}px,${cfg.dy|0}px) rotate(${rot}deg);opacity:0}}`;
-        document.head.appendChild(sEl);
-
-        const el  = document.createElement('div');
-        el.className = 'fp';
-        el.style.cssText = `left:${(cfg.sx+ox)|0}px;top:${(cfg.sy+oy)|0}px;` +
-          `width:${sz|0}px;animation:${name} ${dur.toFixed(1)}s linear forwards`;
-
-        const img = document.createElement('img');
-        img.src = PHOTOS[idx++ % PHOTOS.length];
-        img.loading = 'lazy';
-        img.draggable = false;
-        el.appendChild(img);
-        container.appendChild(el);
-
-        setTimeout(() => { el.remove(); sEl.remove(); }, dur * 1000 + 500);
-      }, i * (350 + Math.random() * 350));
-    }
-    setTimeout(spawnGroup, 2500 + Math.random() * 3500);
-  }
-
-  setTimeout(spawnGroup, 600);
+  // Stagger initial photos so they don't all start at once
+  for (let i = 0; i < MAX; i++) setTimeout(spawn, i * 2000);
 })();
 
 // ── Broadcast ───────────────────────────────────────────
