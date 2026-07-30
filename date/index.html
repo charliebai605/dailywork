@@ -99,6 +99,44 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 .ok-btn { flex: 2; padding: 13px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
 .ok-btn:disabled { opacity: 0.5; }
 
+/* ── Doodle button ── */
+#doodle-btn {
+  position: fixed; bottom: 24px; right: 24px; width: 52px; height: 52px;
+  border-radius: 50%; background: white; border: none; font-size: 22px;
+  cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,0.15); z-index: 25;
+  display: none; align-items: center; justify-content: center;
+  transition: transform 0.15s;
+}
+#doodle-btn:hover { transform: scale(1.08); }
+#doodle-btn.visible { display: flex; }
+#doodle-dot {
+  position: absolute; top: 6px; right: 6px; width: 10px; height: 10px;
+  background: #E53E3E; border-radius: 50%; border: 2px solid white;
+}
+
+/* ── Doodle modal ── */
+.doodle-overlay { position: fixed; inset: 0; z-index: 150; background: white; display: flex; flex-direction: column; }
+.doodle-header { display: flex; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eee; gap: 10px; flex-shrink: 0; }
+.doodle-title { font-size: 16px; font-weight: 800; color: #D4607A; flex: 1; }
+.doodle-tools { display: flex; align-items: center; gap: 8px; }
+.doodle-tools input[type=color] { width: 32px; height: 32px; padding: 0; border: none; border-radius: 6px; cursor: pointer; }
+.doodle-tools input[type=range] { width: 70px; accent-color: #D4607A; }
+.doodle-tool-btn { background: #f5f5f5; border: none; border-radius: 8px; padding: 6px 10px; cursor: pointer; font-size: 13px; font-weight: 600; }
+.doodle-tool-btn:hover { background: #eee; }
+#doodle-canvas { flex: 1; touch-action: none; cursor: crosshair; display: block; }
+
+/* ── Floating background photos ── */
+#bg-photos { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+.fp { position: absolute; border-radius: 10px; overflow: hidden; opacity: 0.28; box-shadow: 0 4px 20px rgba(0,0,0,0.18); will-change: transform; }
+.fp img { width: 100%; display: block; }
+#lock-screen, #app { position: relative; z-index: 1; }
+
+@keyframes fp1 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 30%{transform:rotate(var(--r)) translate(28px,-48px)} 65%{transform:rotate(var(--r)) translate(-18px,-28px)} }
+@keyframes fp2 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 40%{transform:rotate(var(--r)) translate(-32px,-52px)} 70%{transform:rotate(var(--r)) translate(22px,-32px)} }
+@keyframes fp3 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 20%{transform:rotate(var(--r)) translate(38px,-22px)} 55%{transform:rotate(var(--r)) translate(14px,-54px)} 80%{transform:rotate(var(--r)) translate(-26px,-36px)} }
+@keyframes fp4 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 35%{transform:rotate(var(--r)) translate(-42px,-28px)} 68%{transform:rotate(var(--r)) translate(32px,-56px)} }
+@keyframes fp5 { 0%,100%{transform:rotate(var(--r)) translate(0,0)} 25%{transform:rotate(var(--r)) translate(22px,-62px)} 58%{transform:rotate(var(--r)) translate(-36px,-22px)} 82%{transform:rotate(var(--r)) translate(18px,-42px)} }
+
 /* ── Token overlay ── */
 .token-overlay { position: fixed; inset: 0; z-index: 200; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.55); padding: 20px; }
 .token-card { background: white; border-radius: 22px; padding: 32px 24px; width: 100%; max-width: 360px; }
@@ -107,6 +145,8 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
 </style>
 </head>
 <body>
+
+<div id="bg-photos"></div>
 
 <!-- Token Setup -->
 <div id="token-modal" style="display:none">
@@ -184,6 +224,29 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
 <div id="save-bar" style="display:none">
   <span class="save-msg">有未儲存的變更</span>
   <button class="save-btn" id="save-action-btn" onclick="saveChanges()">儲存</button>
+</div>
+
+<!-- Doodle button -->
+<button id="doodle-btn" onclick="openDoodle()" title="塗鴉版">
+  ✏️
+  <span id="doodle-dot" style="display:none"></span>
+</button>
+
+<!-- Doodle Modal -->
+<div id="doodle-modal" style="display:none">
+  <div class="doodle-overlay">
+    <div class="doodle-header">
+      <span class="doodle-title">塗鴉版 ✏️</span>
+      <div class="doodle-tools">
+        <input type="color" id="doodle-color" value="#D4607A" title="顏色">
+        <input type="range" id="doodle-size" min="2" max="30" value="6" title="筆刷大小">
+        <button class="doodle-tool-btn" onclick="clearDoodle()" title="清除">🗑️</button>
+        <button class="doodle-tool-btn" onclick="saveDoodle()" id="doodle-save-btn">儲存</button>
+        <button class="doodle-tool-btn" onclick="closeDoodle()">✕</button>
+      </div>
+    </div>
+    <canvas id="doodle-canvas"></canvas>
+  </div>
 </div>
 
 <!-- Settings Modal -->
@@ -603,6 +666,8 @@ function enterApp() {
   document.getElementById('user-badge').textContent      = u.name;
   document.getElementById('user-badge').style.background = u.color;
   document.getElementById('tz-badge').textContent        = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
+  document.getElementById('doodle-btn').classList.add('visible');
+  updateDoodleDot();
   initDragListeners();
   renderDayList();
 }
@@ -614,6 +679,7 @@ function lockApp() {
   hasPendingChanges = false;
   document.getElementById('app').style.display         = 'none';
   document.getElementById('save-bar').style.display    = 'none';
+  document.getElementById('doodle-btn').classList.remove('visible');
   document.getElementById('lock-screen').style.display = '';
   document.getElementById('step-pw').style.display     = '';
   document.getElementById('step-user').style.display   = 'none';
@@ -636,6 +702,7 @@ async function refreshData() {
       st.sha  = file.sha;
       hasPendingChanges = false;
       document.getElementById('save-bar').style.display = 'none';
+      updateDoodleDot();
       renderDayList();
     }
   } catch { alert('重新整理失敗'); }
@@ -696,10 +763,167 @@ function showTokenModal() {
 function saveTokenAndContinue() {
   const token = document.getElementById('token-input').value.trim();
   if (!token) { alert('請輸入 GitHub Token'); return; }
-  setToken(token); // 先存進記憶體，不只依賴 localStorage
+  setToken(token);
   document.getElementById('token-modal').style.display = 'none';
   doUnlock();
 }
+
+// ── Doodle ────────────────────────────────────────────
+let doodleDrawing = false;
+
+function openDoodle() {
+  const modal = document.getElementById('doodle-modal');
+  modal.style.display = '';
+  const canvas = document.getElementById('doodle-canvas');
+  // Fit canvas to available space
+  requestAnimationFrame(() => {
+    canvas.width  = canvas.offsetWidth;
+    canvas.height = canvas.offsetHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#FFFBFC';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Load existing doodle if any
+    if (st.data?.doodle?.dataURL) {
+      const img = new Image();
+      img.onload = () => ctx.drawImage(img, 0, 0);
+      img.src = st.data.doodle.dataURL;
+    }
+    initDoodleCanvas(canvas, ctx);
+  });
+  // Mark as read by current user
+  markDoodleRead();
+}
+
+function closeDoodle() {
+  document.getElementById('doodle-modal').style.display = 'none';
+}
+
+function clearDoodle() {
+  if (!confirm('確定要清除塗鴉嗎？')) return;
+  const canvas = document.getElementById('doodle-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#FFFBFC';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+async function saveDoodle() {
+  const canvas = document.getElementById('doodle-canvas');
+  const dataURL = canvas.toDataURL('image/jpeg', 0.7);
+  st.data.doodle = { by: st.user, dataURL, readBy: [st.user] };
+  syncTokenToData();
+  const btn = document.getElementById('doodle-save-btn');
+  btn.textContent = '儲存中…'; btn.disabled = true;
+  try {
+    const encrypted = await encData(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(encrypted, st.sha);
+    st.salt = encrypted.salt;
+    closeDoodle();
+    updateDoodleDot();
+  } catch {
+    alert('儲存失敗，請重試');
+  } finally {
+    btn.textContent = '儲存'; btn.disabled = false;
+  }
+}
+
+function markDoodleRead() {
+  const d = st.data?.doodle;
+  if (!d) return;
+  if (!d.readBy) d.readBy = [];
+  if (!d.readBy.includes(st.user)) {
+    d.readBy.push(st.user);
+    // Save silently in background
+    encData(st.data, st.pw, st.salt).then(enc => {
+      ghPut(enc, st.sha).then(newSha => { st.sha = newSha; st.salt = enc.salt; }).catch(()=>{});
+    });
+  }
+  updateDoodleDot();
+}
+
+function updateDoodleDot() {
+  const d = st.data?.doodle;
+  const dot = document.getElementById('doodle-dot');
+  if (!dot) return;
+  // Show dot if there's a doodle from the other person that current user hasn't read
+  const hasUnread = d && d.by !== st.user && !(d.readBy || []).includes(st.user);
+  dot.style.display = hasUnread ? '' : 'none';
+}
+
+function initDoodleCanvas(canvas, ctx) {
+  // Remove old listeners by cloning
+  const nc = canvas.cloneNode(true);
+  canvas.parentNode.replaceChild(nc, canvas);
+  const nctx = nc.getContext('2d');
+  // Re-draw existing content
+  if (st.data?.doodle?.dataURL) {
+    const img = new Image();
+    img.onload = () => nctx.drawImage(img, 0, 0);
+    img.src = st.data.doodle.dataURL;
+  } else {
+    nctx.fillStyle = '#FFFBFC';
+    nctx.fillRect(0, 0, nc.width, nc.height);
+  }
+
+  let drawing = false;
+  const getPos = e => {
+    const rect = nc.getBoundingClientRect();
+    const src = e.touches ? e.touches[0] : e;
+    return { x: src.clientX - rect.left, y: src.clientY - rect.top };
+  };
+  const startDraw = e => {
+    e.preventDefault();
+    drawing = true;
+    const { x, y } = getPos(e);
+    nctx.beginPath(); nctx.moveTo(x, y);
+  };
+  const draw = e => {
+    if (!drawing) return;
+    e.preventDefault();
+    const { x, y } = getPos(e);
+    nctx.lineTo(x, y);
+    nctx.strokeStyle = document.getElementById('doodle-color').value;
+    nctx.lineWidth   = document.getElementById('doodle-size').value;
+    nctx.lineCap = 'round'; nctx.lineJoin = 'round';
+    nctx.stroke();
+    nctx.beginPath(); nctx.moveTo(x, y);
+  };
+  const endDraw = () => { drawing = false; };
+
+  nc.addEventListener('pointerdown', startDraw);
+  nc.addEventListener('pointermove', draw);
+  nc.addEventListener('pointerup',   endDraw);
+  nc.addEventListener('pointerleave', endDraw);
+}
+
+// ── Floating background photos ─────────────────────────
+(function initBgPhotos() {
+  const ANIMS = ['fp1','fp2','fp3','fp4','fp5'];
+  const N = 21;
+  const c = document.getElementById('bg-photos');
+  for (let i = 0; i < N; i++) {
+    const src  = `photos/p${String(i+1).padStart(2,'0')}.jpg`;
+    const left = ((i * 4.7 + 2) % 92).toFixed(1);
+    const top  = ((i * 7.3 + 3) % 88).toFixed(1);
+    const rot  = (-12 + (i * 5.3) % 24).toFixed(1);
+    const size = (110 + (i * 13) % 70).toFixed(0);
+    const dur  = (26 + (i * 3.7) % 20).toFixed(1);
+    const del  = (-(i * 4.1) % 44).toFixed(1);
+    const anim = ANIMS[i % 5];
+
+    const el = document.createElement('div');
+    el.className = 'fp';
+    el.style.cssText =
+      `left:${left}vw;top:${top}vh;width:${size}px;--r:${rot}deg;` +
+      `animation:${anim} ${dur}s ${del}s ease-in-out infinite;`;
+
+    const img = document.createElement('img');
+    img.src = src;
+    img.loading = 'lazy';
+    img.draggable = false;
+    el.appendChild(img);
+    c.appendChild(el);
+  }
+})();
 </script>
 </body>
 </html>
