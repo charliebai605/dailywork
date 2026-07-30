@@ -99,6 +99,15 @@ header { position: sticky; top: 0; background: white; border-bottom: 1px solid #
 .ok-btn { flex: 2; padding: 13px; background: #D4607A; color: white; border: none; border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; }
 .ok-btn:disabled { opacity: 0.5; }
 
+/* ── Photo upload ── */
+.photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 12px; min-height: 20px; }
+.photo-thumb { position: relative; width: 72px; height: 72px; border-radius: 10px; overflow: hidden; flex-shrink: 0; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb .del-btn { position: absolute; top: 3px; right: 3px; width: 20px; height: 20px; border-radius: 50%; background: rgba(0,0,0,0.55); color: white; border: none; font-size: 11px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; }
+.upload-label { display: inline-flex; align-items: center; gap: 6px; padding: 10px 18px; background: #fdf0f3; color: #D4607A; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; border: 2px dashed #f0c0cc; margin-bottom: 4px; }
+.upload-label:hover { background: #fce4ea; }
+#upload-status { font-size: 13px; color: #888; margin-top: 6px; min-height: 18px; }
+
 /* ── Doodle button ── */
 #doodle-btn {
   position: fixed; bottom: 24px; right: 24px; width: 52px; height: 52px;
@@ -304,6 +313,14 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
         <button class="ok-btn" id="set-save-btn" onclick="saveSettings()">儲存</button>
       </div>
       <div class="err" id="set-err"></div>
+
+      <label class="field-label" style="margin-top:20px">背景照片輪播（最多 10 張）</label>
+      <div id="photo-grid" class="photo-grid"></div>
+      <label class="upload-label">
+        📷 上傳照片
+        <input type="file" id="photo-file-input" accept="image/*" multiple style="display:none" onchange="uploadPhotos(this)">
+      </label>
+      <div id="upload-status"></div>
     </div>
   </div>
 </div>
@@ -708,6 +725,7 @@ function enterApp() {
   document.getElementById('tz-badge').textContent        = TZ_OPTS.find(t => t.v === tz)?.l ?? `UTC+${tz/60}`;
   document.getElementById('doodle-btn').classList.add('visible');
   document.getElementById('broadcast-btn').classList.add('visible');
+  refreshPhotoPool();
   updateDoodleDot();
   initDragListeners();
   renderDayList();
@@ -760,6 +778,8 @@ function openSettings() {
     TZ_OPTS.map(t => `<option value="${t.v}"${t.v === tz ? ' selected' : ''}>${t.l}</option>`).join('');
   document.getElementById('set-token').value     = getToken();
   document.getElementById('set-err').textContent = '';
+  document.getElementById('upload-status').textContent = '';
+  renderPhotoGrid();
   document.getElementById('settings-modal').style.display = '';
 }
 function closeSettings() { document.getElementById('settings-modal').style.display = 'none'; }
@@ -939,9 +959,107 @@ function initDoodleCanvas(canvas, ctx) {
   nc.addEventListener('pointerleave', endDraw);
 }
 
+// ── Photo upload ─────────────────────────────────────────
+function renderPhotoGrid() {
+  const photos = st.data?.userPhotos ?? [];
+  const grid   = document.getElementById('photo-grid');
+  if (!grid) return;
+  if (!photos.length) {
+    grid.innerHTML = '<span style="color:#bbb;font-size:13px">尚無上傳照片</span>';
+    return;
+  }
+  grid.innerHTML = photos.map((p, i) =>
+    `<div class="photo-thumb">` +
+    `<img src="${p.dataURL}">` +
+    `<button class="del-btn" onclick="deletePhoto(${i})">✕</button>` +
+    `</div>`
+  ).join('');
+}
+
+function refreshPhotoPool() {
+  userBgPhotoURLs = (st.data?.userPhotos ?? []).map(p => p.dataURL);
+}
+
+async function resizeToDataURL(file, maxDim = 300, quality = 0.72) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = e => {
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = () => {
+        const scale  = Math.min(maxDim / img.width, maxDim / img.height, 1);
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.width  * scale | 0;
+        canvas.height = img.height * scale | 0;
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function uploadPhotos(input) {
+  const files  = Array.from(input.files);
+  if (!files.length) return;
+  const status = document.getElementById('upload-status');
+  const MAX    = 10;
+  const existing = (st.data.userPhotos ?? []).length;
+  if (existing + files.length > MAX) {
+    status.textContent = `最多 ${MAX} 張，目前已有 ${existing} 張`;
+    input.value = '';
+    return;
+  }
+  status.textContent = '壓縮中…';
+  input.disabled = true;
+  try {
+    const dataURLs = await Promise.all(files.map(f => resizeToDataURL(f)));
+    if (!st.data.userPhotos) st.data.userPhotos = [];
+    dataURLs.forEach(dataURL => st.data.userPhotos.push({ dataURL, by: st.user, ts: Date.now() }));
+    status.textContent = '儲存中…';
+    syncTokenToData();
+    const latest = await ghGet();
+    if (latest) st.sha = latest.sha;
+    const enc = await encData(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(enc, st.sha);
+    st.salt = enc.salt;
+    refreshPhotoPool();
+    renderPhotoGrid();
+    status.textContent = `已上傳 ${files.length} 張`;
+  } catch {
+    alert('上傳失敗，請重試');
+    status.textContent = '';
+  } finally {
+    input.disabled = false;
+    input.value = '';
+  }
+}
+
+async function deletePhoto(i) {
+  if (!confirm('確定要刪除這張照片嗎？')) return;
+  st.data.userPhotos.splice(i, 1);
+  try {
+    syncTokenToData();
+    const latest = await ghGet();
+    if (latest) st.sha = latest.sha;
+    const enc = await encData(st.data, st.pw, st.salt);
+    st.sha  = await ghPut(enc, st.sha);
+    st.salt = enc.salt;
+    refreshPhotoPool();
+    renderPhotoGrid();
+  } catch {
+    alert('刪除失敗，請重試');
+  }
+}
+
 // ── Floating background photos ─────────────────────────
+const STATIC_PHOTOS = Array.from({length: 21}, (_, i) => `photos/p${String(i+1).padStart(2,'0')}.jpg`);
+let userBgPhotoURLs = [];
+function getBgPhotoPool() { return STATIC_PHOTOS.concat(userBgPhotoURLs); }
+
 (function initBgPhotos() {
-  const PHOTOS = Array.from({length: 21}, (_, i) => `photos/p${String(i+1).padStart(2,'0')}.jpg`);
   let idx = 0;
   let active = 0;
   const MAX = 3;
@@ -976,7 +1094,8 @@ function initDoodleCanvas(canvas, ctx) {
       `width:${sz|0}px;animation:${name} ${dur.toFixed(1)}s linear forwards`;
 
     const img = document.createElement('img');
-    img.src = PHOTOS[idx++ % PHOTOS.length];
+    const pool = getBgPhotoPool();
+    img.src = pool[idx++ % pool.length];
     img.loading = 'lazy';
     img.draggable = false;
     el.appendChild(img);
