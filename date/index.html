@@ -1062,28 +1062,43 @@ function getBgPhotoPool() { return STATIC_PHOTOS.concat(userBgPhotoURLs); }
     if (active >= MAX) return;
     const W  = window.innerWidth, H = window.innerHeight;
     const sz = 120 + Math.random() * 80;
-    const corners = [
-      { sx: -sz, sy: -sz, dx: W+sz,    dy: H+sz    },
-      { sx: W,   sy: -sz, dx: -(W+sz), dy: H+sz    },
-      { sx: -sz, sy: H,   dx: W+sz,    dy: -(H+sz) },
-      { sx: W,   sy: H,   dx: -(W+sz), dy: -(H+sz) },
-    ];
-    const cfg  = corners[Math.floor(Math.random() * 4)];
-    const diag = Math.sqrt(cfg.dx * cfg.dx + cfg.dy * cfg.dy);
-    const dur  = diag / (60 + Math.random() * 30);
+
+    // Random point on a given edge (0=top 1=right 2=bottom 3=left)
+    const edgePt = e => {
+      if (e === 0) return [Math.random() * (W + sz*2) - sz, -sz];
+      if (e === 1) return [W + sz, Math.random() * (H + sz*2) - sz];
+      if (e === 2) return [Math.random() * (W + sz*2) - sz, H + sz];
+                   return [-sz, Math.random() * (H + sz*2) - sz];
+    };
+    const se = Math.floor(Math.random() * 4);
+    let   ee = Math.floor(Math.random() * 3); if (ee >= se) ee++;
+    const [sx, sy] = edgePt(se), [ex, ey] = edgePt(ee);
+
+    // Midpoint with perpendicular wobble for a gentle arc
+    const mx = (sx+ex)/2 + (Math.random()-0.5) * Math.min(W,H) * 0.35;
+    const my = (sy+ey)/2 + (Math.random()-0.5) * Math.min(W,H) * 0.35;
+
+    const dist = Math.hypot(ex-sx, ey-sy);
+    const dur  = dist / (55 + Math.random() * 35);
     const rot  = -14 + Math.random() * 28;
+
+    // Keyframe translations are relative to start position
+    const m1x = (mx-sx)|0, m1y = (my-sy)|0;
+    const e1x = (ex-sx)|0, e1y = (ey-sy)|0;
 
     const name = 'fpa' + Math.random().toString(36).slice(2, 8);
     const sEl  = document.createElement('style');
     sEl.textContent = `@keyframes ${name}{` +
       `0%{transform:translate(0,0) rotate(${rot}deg);opacity:0}` +
-      `12%{opacity:0.6}88%{opacity:0.6}` +
-      `100%{transform:translate(${cfg.dx|0}px,${cfg.dy|0}px) rotate(${rot}deg);opacity:0}}`;
+      `10%{opacity:0.6}` +
+      `50%{transform:translate(${m1x}px,${m1y}px) rotate(${rot}deg)}` +
+      `90%{opacity:0.6}` +
+      `100%{transform:translate(${e1x}px,${e1y}px) rotate(${rot}deg);opacity:0}}`;
     document.head.appendChild(sEl);
 
     const el = document.createElement('div');
     el.className = 'fp';
-    el.style.cssText = `left:${cfg.sx|0}px;top:${cfg.sy|0}px;` +
+    el.style.cssText = `left:${sx|0}px;top:${sy|0}px;` +
       `width:${sz|0}px;animation:${name} ${dur.toFixed(1)}s linear forwards`;
 
     const img = document.createElement('img');
