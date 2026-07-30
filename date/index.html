@@ -194,7 +194,7 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
       <div class="modal-title">設定</div>
       <label class="field-label">我的時區</label>
       <select id="set-tz"></select>
-      <label class="field-label" style="margin-top:4px">GitHub Token</label>
+      <label class="field-label" style="margin-top:4px">GitHub Token（設定後自動分享給對方）</label>
       <input type="password" id="set-token" placeholder="ghp_...">
       <div class="modal-actions">
         <button class="cancel-btn" onclick="closeSettings()">取消</button>
@@ -258,13 +258,17 @@ async function decData(shell, pw) {
 }
 
 // ── GitHub ──────────────────────────────────────────────
-const getToken = () => localStorage.getItem('github_token') || '';
+// Token priority: localStorage → encrypted data (shared via schedule.json)
+const getToken = () => localStorage.getItem('github_token') || st?.data?.token || '';
 
 async function ghGet() {
+  // Public repo: reads work without a token
   const token = getToken();
-  if (!token) throw new Error('no_token');
-  const r = await fetch(API_URL, { headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json' } });
+  const headers = { Accept: 'application/vnd.github+json' };
+  if (token) headers.Authorization = `Bearer ${token}`;
+  const r = await fetch(API_URL, { headers });
   if (r.status === 404) return null;
+  if (r.status === 401 || r.status === 403) throw new Error('no_token');
   if (!r.ok) throw new Error('fetch_failed');
   const j = await r.json();
   return { content: JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g, ''))))), sha: j.sha };
@@ -282,6 +286,12 @@ async function ghPut(encrypted, sha) {
   });
   if (!r.ok) throw new Error('save_failed');
   return (await r.json()).content.sha;
+}
+
+// Embed the current localStorage token into data so the other person gets it after decryption
+function syncTokenToData() {
+  const local = localStorage.getItem('github_token');
+  if (local) st.data.token = local;
 }
 
 // ── Time helpers ────────────────────────────────────────
@@ -465,6 +475,7 @@ async function saveChanges() {
   btn.textContent = '儲存中…';
   btn.disabled    = true;
   try {
+    syncTokenToData();
     const encrypted = await encData(st.data, st.pw, st.salt);
     st.sha  = await ghPut(encrypted, st.sha);
     st.salt = encrypted.salt;
@@ -490,18 +501,22 @@ async function doUnlock() {
   btn.disabled    = true;
 
   try {
-    if (!getToken()) { showTokenModal(); return; }
-
     const file = await ghGet();
     let data, salt = null, sha = null;
 
     if (!file) {
+      // 第一次使用，還沒有資料檔案：需要 token 才能建立
+      if (!getToken()) { showTokenModal(); return; }
       data = normalize({ users: { a: { tzOffset: null }, b: { tzOffset: null } }, avail: { a: {}, b: {} } });
     } else {
       try {
         data = normalize(await decData(file.content, pw));
         salt = file.content.salt;
         sha  = file.sha;
+        // 自動把資料裡的 token 存到 localStorage，讓另一方不用手動設定
+        if (data.token && !localStorage.getItem('github_token')) {
+          localStorage.setItem('github_token', data.token);
+        }
       } catch {
         errEl.textContent = '密碼錯誤';
         return;
@@ -556,6 +571,7 @@ async function saveTz() {
   btn.textContent = '儲存中…';
   btn.disabled    = true;
   try {
+    syncTokenToData();
     const encrypted = await encData(st.data, st.pw, st.salt);
     st.sha  = await ghPut(encrypted, st.sha);
     st.salt = encrypted.salt;
@@ -624,7 +640,7 @@ function openSettings() {
   const tz = myTz();
   document.getElementById('set-tz').innerHTML =
     TZ_OPTS.map(t => `<option value="${t.v}"${t.v === tz ? ' selected' : ''}>${t.l}</option>`).join('');
-  document.getElementById('set-token').value    = getToken();
+  document.getElementById('set-token').value     = localStorage.getItem('github_token') || st.data?.token || '';
   document.getElementById('set-err').textContent = '';
   document.getElementById('settings-modal').style.display = '';
 }
@@ -639,18 +655,23 @@ async function saveSettings() {
   if (newToken) localStorage.setItem('github_token', newToken);
   else          localStorage.removeItem('github_token');
 
-  const oldTz = myTz();
-  if (newTz !== oldTz) {
+  const oldTz    = myTz();
+  const tzChanged = newTz !== oldTz;
+  // Always save if token changed (so the other person gets the new token)
+  const tokenChanged = newToken !== (st.data?.token || '');
+
+  if (tzChanged || tokenChanged) {
     const btn = document.getElementById('set-save-btn');
     btn.textContent = '儲存中…'; btn.disabled = true;
-    st.data.users[st.user].tzOffset = newTz;
+    if (tzChanged) st.data.users[st.user].tzOffset = newTz;
+    syncTokenToData();
     try {
       const encrypted = await encData(st.data, st.pw, st.salt);
       st.sha  = await ghPut(encrypted, st.sha);
       st.salt = encrypted.salt;
     } catch {
       errEl.textContent = '儲存失敗';
-      st.data.users[st.user].tzOffset = oldTz;
+      if (tzChanged) st.data.users[st.user].tzOffset = oldTz;
       btn.textContent = '儲存'; btn.disabled = false;
       return;
     }
