@@ -229,8 +229,9 @@ const TZ_OPTS = [
 
 // ── State ──────────────────────────────────────────────
 let st = { user: null, pw: null, data: null, salt: null, sha: null };
-let unlockedState   = null; // holds decrypted data before user is selected
+let unlockedState     = null;
 let hasPendingChanges = false;
+let _sessionToken     = ''; // in-memory token，避免 Chrome 手機 localStorage 不穩定
 
 // ── Crypto ─────────────────────────────────────────────
 async function deriveKey(pw, salt) {
@@ -258,8 +259,16 @@ async function decData(shell, pw) {
 }
 
 // ── GitHub ──────────────────────────────────────────────
-// Token priority: localStorage → encrypted data (shared via schedule.json)
-const getToken = () => localStorage.getItem('github_token') || st?.data?.token || '';
+function setToken(t) {
+  _sessionToken = t;
+  try { if (t) localStorage.setItem('github_token', t); else localStorage.removeItem('github_token'); } catch(_) {}
+}
+// Priority: in-memory → localStorage → encrypted data
+function getToken() {
+  if (_sessionToken) return _sessionToken;
+  try { const v = localStorage.getItem('github_token'); if (v) return v; } catch(_) {}
+  return st?.data?.token || '';
+}
 
 async function ghGet() {
   // Public repo: reads work without a token
@@ -290,8 +299,8 @@ async function ghPut(encrypted, sha) {
 
 // Embed the current localStorage token into data so the other person gets it after decryption
 function syncTokenToData() {
-  const local = localStorage.getItem('github_token');
-  if (local) st.data.token = local;
+  const t = getToken();
+  if (t) st.data.token = t;
 }
 
 // ── Time helpers ────────────────────────────────────────
@@ -513,10 +522,8 @@ async function doUnlock() {
         data = normalize(await decData(file.content, pw));
         salt = file.content.salt;
         sha  = file.sha;
-        // 自動把資料裡的 token 存到 localStorage，讓另一方不用手動設定
-        if (data.token && !localStorage.getItem('github_token')) {
-          localStorage.setItem('github_token', data.token);
-        }
+        // 自動把資料裡的 token 帶入，讓另一方不用手動設定
+        if (data.token && !getToken()) setToken(data.token);
       } catch {
         errEl.textContent = '密碼錯誤';
         return;
@@ -640,7 +647,7 @@ function openSettings() {
   const tz = myTz();
   document.getElementById('set-tz').innerHTML =
     TZ_OPTS.map(t => `<option value="${t.v}"${t.v === tz ? ' selected' : ''}>${t.l}</option>`).join('');
-  document.getElementById('set-token').value     = localStorage.getItem('github_token') || st.data?.token || '';
+  document.getElementById('set-token').value     = getToken();
   document.getElementById('set-err').textContent = '';
   document.getElementById('settings-modal').style.display = '';
 }
@@ -652,8 +659,7 @@ async function saveSettings() {
   const errEl    = document.getElementById('set-err');
   errEl.textContent = '';
 
-  if (newToken) localStorage.setItem('github_token', newToken);
-  else          localStorage.removeItem('github_token');
+  setToken(newToken);
 
   const oldTz    = myTz();
   const tzChanged = newTz !== oldTz;
@@ -690,7 +696,7 @@ function showTokenModal() {
 function saveTokenAndContinue() {
   const token = document.getElementById('token-input').value.trim();
   if (!token) { alert('請輸入 GitHub Token'); return; }
-  localStorage.setItem('github_token', token);
+  setToken(token); // 先存進記憶體，不只依賴 localStorage
   document.getElementById('token-modal').style.display = 'none';
   doUnlock();
 }
