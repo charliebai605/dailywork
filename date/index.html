@@ -314,7 +314,7 @@ code { background: #f5f5f5; padding: 2px 5px; border-radius: 4px; font-size: 12p
       </div>
       <div class="err" id="set-err"></div>
 
-      <label class="field-label" style="margin-top:20px">背景照片輪播（最多 10 張）</label>
+      <label class="field-label" style="margin-top:20px">背景照片輪播</label>
       <div id="photo-grid" class="photo-grid"></div>
       <label class="upload-label">
         📷 上傳照片
@@ -980,7 +980,7 @@ function refreshPhotoPool() {
   userBgPhotoURLs = (st.data?.userPhotos ?? []).map(p => p.dataURL);
 }
 
-async function resizeToDataURL(file, maxDim = 300, quality = 0.72) {
+async function resizeToDataURL(file, maxDim = 200, quality = 0.68) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = reject;
@@ -1005,13 +1005,6 @@ async function uploadPhotos(input) {
   const files  = Array.from(input.files);
   if (!files.length) return;
   const status = document.getElementById('upload-status');
-  const MAX    = 10;
-  const existing = (st.data.userPhotos ?? []).length;
-  if (existing + files.length > MAX) {
-    status.textContent = `最多 ${MAX} 張，目前已有 ${existing} 張`;
-    input.value = '';
-    return;
-  }
   status.textContent = '壓縮中…';
   input.disabled = true;
   try {
