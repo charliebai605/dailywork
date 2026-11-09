@@ -1,6 +1,11 @@
 {
-  "lastUpdated": "2026-11-08T14:54:08.135601Z",
+  "lastUpdated": "2026-11-09T18:33:54.049655Z",
   "rates": [
+    {
+      "date": "2026-11-09",
+      "rate": 0.207,
+      "source": "exchangerate-api.com"
+    },
     {
       "date": "2026-11-08",
       "rate": 0.207,
@@ -143,11 +148,6 @@
     },
     {
       "date": "2026-10-11",
-      "rate": 0.202,
-      "source": "exchangerate-api.com"
-    },
-    {
-      "date": "2026-10-10",
       "rate": 0.202,
       "source": "exchangerate-api.com"
     }
